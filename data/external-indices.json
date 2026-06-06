@@ -1,0 +1,29 @@
+{
+  "_comment": "SAMPLE / PLACEHOLDER values only — replace with licensed or manually-sourced data. These are NOT real third-party scores and must NOT be cited as such. DISPLAY-ONLY: never used in any SHE Score calculation, oracle, or $SHE token logic.",
+  "_sample": true,
+  "IND": {
+    "wef_gggi": { "score": 0.64, "rank": 127, "year": 2024 },
+    "wps_index": { "score": 0.60, "rank": 128, "edition": "2023/24" },
+    "sigi": { "category": "High", "year": 2023 }
+  },
+  "USA": {
+    "wef_gggi": { "score": 0.75, "rank": 42, "year": 2024 },
+    "wps_index": { "score": 0.82, "rank": 37, "edition": "2023/24" },
+    "sigi": { "category": "Low", "year": 2023 }
+  },
+  "ISL": {
+    "wef_gggi": { "score": 0.93, "rank": 1, "year": 2024 },
+    "wps_index": { "score": 0.92, "rank": 2, "edition": "2023/24" },
+    "sigi": { "category": "Very Low", "year": 2023 }
+  },
+  "NGA": {
+    "wef_gggi": { "score": 0.63, "rank": 125, "year": 2024 },
+    "wps_index": { "score": 0.58, "rank": 140, "edition": "2023/24" },
+    "sigi": { "category": "High", "year": 2023 }
+  },
+  "KEN": {
+    "wef_gggi": { "score": 0.69, "rank": 75, "year": 2024 },
+    "wps_index": { "score": 0.62, "rank": 120, "edition": "2023/24" },
+    "sigi": { "category": "Medium", "year": 2023 }
+  }
+}

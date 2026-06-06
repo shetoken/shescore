@@ -1,0 +1,94 @@
+{
+  "intro": [
+    "The SHE Score doesn't exist in a vacuum. The world's leading institutions have spent two decades building rigorous measures of women's empowerment and gender equality — and several of them feed directly into our methodology as data sources. Here's the full landscape: what each index measures, who publishes it, and how the SHE Score relates to it.",
+    "What makes the SHE Score different from every index below: none of them are investable. They inform researchers and policymakers. The SHE Score does that too — and then ties a token's supply mechanics to the result, so the world's progress on gender equality carries a market signal."
+  ],
+  "disclaimer": "The SHE Score is an independent project. It is not affiliated with, endorsed by, or derived from any of the indices listed below, including the UNDP/UN Women Women's Empowerment Index.",
+  "indices": [
+    {
+      "title": "Women's Empowerment Index (WEI) & Global Gender Parity Index (GGPI)",
+      "facts": "UNDP & UN Women (jointly) · First published 2023 · 114 countries · Scale 0–1",
+      "description": "Twin indices published together in the \"Paths to Equal\" report. The WEI measures women's power and freedom to make choices across five dimensions — life and good health; education, skill-building and knowledge; labour and financial inclusion; participation in decision-making; and freedom from violence. The GGPI complements it by measuring women's achievements relative to men across four dimensions. Headline finding: globally, women are empowered to reach only about 60% of their full potential, and less than 1% of women and girls live in a country with both high empowerment and a small gender gap.",
+      "relates": "Closest conceptual neighbour — five dimensions, similar pillar structure, and the same acronym (which is why we're transparent about being unaffiliated). The UNDP/UN Women WEI is published as a research report; the SHE Score is published as a continuously tracked, country-and-state-level score with token mechanics attached.",
+      "sourceName": "UNDP / UN Women",
+      "sourceUrl": "https://www.unwomen.org/en/digital-library/publications/2023/06/paths-to-equal"
+    },
+    {
+      "title": "Global Gender Gap Index",
+      "facts": "World Economic Forum · First published 2006 · 148 economies (2025, 19th ed.) · Scale 0–1 (share of gap closed)",
+      "description": "The longest-standing gender index in the world. Benchmarks parity across four subindexes: Economic Participation and Opportunity, Educational Attainment, Health and Survival, and Political Empowerment. Measures the ratio of women's to men's outcomes rather than women's absolute status. The 2025 edition found 68.8% of the global gap closed, with full parity an estimated 123 years away at the current pace. Iceland has led the ranking for 16 consecutive years.",
+      "relates": "The Global Gender Gap Index measures parity (women vs. men); the SHE Score measures women's absolute conditions, including a direct crime penalty the WEF index doesn't have. A country could score well on parity while both genders fare poorly — the SHE Score is designed to catch that.",
+      "sourceName": "World Economic Forum",
+      "sourceUrl": "https://www.weforum.org/publications/global-gender-gap-report-2025/"
+    },
+    {
+      "title": "Women, Peace and Security (WPS) Index",
+      "facts": "Georgetown GIWPS with PRIO · First published 2017 · Biennial (5th ed. 2025/26) · 181 countries · Scale 0–1",
+      "description": "Scores countries on women's wellbeing using 13 equally weighted indicators spanning three dimensions: inclusion (education, employment, financial inclusion, parliamentary representation), justice (legal discrimination, access to justice, son bias), and security (intimate partner violence, community safety, political violence targeting women, proximity to conflict). Denmark ranks first; Afghanistan last. GIWPS also runs a monthly-updated conflict tracker covering women in ~27 conflict-affected countries.",
+      "relates": "The WPS Index is the strongest existing measure of women's safety — the dimension our Safety (Crime Penalty) pillar penalizes directly. It's biennial and research-oriented; the SHE Score publishes annually (quarterly for registered governments) with sub-national scoring for Indian states.",
+      "sourceName": "Georgetown GIWPS",
+      "sourceUrl": "https://giwps.georgetown.edu/the-index/"
+    },
+    {
+      "title": "Gender Equality Index",
+      "facts": "European Institute for Gender Equality (EIGE) · Tracking since 2005 · EU member states only · Scale 1–100",
+      "description": "The EU's official gender equality measure, built from 31 indicators across six core domains: work, money, knowledge, time, power, and health — plus two satellite domains (violence against women, intersecting inequalities) that sit outside the core score. Used directly by EU policymakers to track progress and design policy.",
+      "relates": "Methodologically sophisticated but limited to 27 EU countries. The SHE Score covers 105 countries, including the developing economies where the largest empowerment gaps — and the largest improvement opportunities — exist.",
+      "sourceName": "EIGE (europa.eu)",
+      "sourceUrl": "https://eige.europa.eu/gender-equality-index"
+    },
+    {
+      "title": "Social Institutions and Gender Index (SIGI)",
+      "facts": "OECD Development Centre · Global · Focus: discriminatory social institutions",
+      "description": "Rather than measuring outcomes, SIGI measures the root causes behind them: discriminatory laws, social norms, and practices — covering areas like family law, inheritance rights, freedom of movement, and restricted access to productive resources.",
+      "relates": "SIGI is one of our upstream data sources — it feeds the legal rights and freedom-of-movement indicators in our Empowerment pillar. SIGI explains why outcomes are unequal; the SHE Score measures whether the outcomes themselves are improving.",
+      "sourceName": "OECD (genderindex.org)",
+      "sourceUrl": "https://www.genderindex.org/"
+    },
+    {
+      "title": "Women's Empowerment in Agriculture Index (WEAI)",
+      "facts": "IFPRI (with USAID and OPHI) · First published 2012 · Sector-specific (agriculture)",
+      "description": "The first standardized measure of women's empowerment within agriculture, built from household surveys. Measures empowerment across five domains of agricultural decision-making plus gender parity within the household. Has spawned a family of variants: the Abbreviated WEAI (A-WEAI), the project-level pro-WEAI, and WEMNS — a streamlined empowerment metric for national statistical systems developed with Emory, Oxford, and the World Bank.",
+      "relates": "Sector-deep where the SHE Score is economy-wide. WEAI-style survey instruments are a model for how our registered-NGO data pipeline could verify program-level outcomes in rural economies.",
+      "sourceName": "IFPRI (weai.ifpri.info)",
+      "sourceUrl": "https://weai.ifpri.info/"
+    },
+    {
+      "title": "SHE Index (powered by EY)",
+      "facts": "SHE Community (Norway) with EY · First published 2018 · Participating companies · Scale 0–100",
+      "description": "A corporate index, not a country index. Companies complete a 36-question survey across six categories — including actual gender balance, gender pay gap, and talent and recruitment — and receive a 0–100 score measuring gender balance in leadership and workforce. Over 120 companies have joined; results are announced at the annual SHE Conference.",
+      "relates": "Different unit of measurement entirely — companies, not countries. We share a name fragment but no affiliation. Our roadmap's \"Corporate SHE Score for ESG workplace measurement\" (Phase 6) would be the closest point of overlap, and the naming distinction matters there.",
+      "sourceName": "SHE Index (sheindex.com)",
+      "sourceUrl": "https://sheindex.com/"
+    },
+    {
+      "title": "Women, Business and the Law (WBL)",
+      "facts": "World Bank · Annual · Focus: legal frameworks",
+      "description": "Scores economies on the laws and regulations that affect women's economic opportunity — covering mobility, workplace rights, pay, marriage, parenthood, entrepreneurship, assets, and pensions. One of the most widely used legal-equality datasets in development economics.",
+      "relates": "A direct data source: WBL feeds the legal rights and property ownership indicators in our Empowerment and Economic Inclusion pillars.",
+      "sourceName": "World Bank (WBL)",
+      "sourceUrl": "https://wbl.worldbank.org/"
+    },
+    {
+      "title": "Gender Inequality Index (GII)",
+      "facts": "UNDP (Human Development Report) · Focus: inequality-adjusted human development",
+      "description": "A long-standing composite measuring the loss in human development due to inequality between women and men across reproductive health, empowerment, and labour market participation. Published alongside the Human Development Index.",
+      "relates": "The GII measures the cost of inequality at a high level; the SHE Score decomposes women's conditions into actionable pillars that governments and NGOs can directly move — and be rewarded for moving.",
+      "sourceName": "UNDP (hdr.undp.org)",
+      "sourceUrl": "https://hdr.undp.org/data-center/thematic-composite-indices/gender-inequality-index"
+    }
+  ],
+  "table": [
+    { "index": "SHE Score", "publisher": "SHE Foundation", "coverage": "105 countries + Indian states", "frequency": "Annual (quarterly for registered govts)", "investable": "Yes — $SHE", "she": true },
+    { "index": "WEI / GGPI", "publisher": "UNDP & UN Women", "coverage": "114 countries", "frequency": "Report-based (2023)", "investable": "No" },
+    { "index": "Global Gender Gap Index", "publisher": "World Economic Forum", "coverage": "148 economies", "frequency": "Annual since 2006", "investable": "No" },
+    { "index": "WPS Index", "publisher": "Georgetown GIWPS / PRIO", "coverage": "181 countries", "frequency": "Biennial", "investable": "No" },
+    { "index": "Gender Equality Index", "publisher": "EIGE", "coverage": "EU member states", "frequency": "Periodic", "investable": "No" },
+    { "index": "SIGI", "publisher": "OECD", "coverage": "Global", "frequency": "Periodic", "investable": "No" },
+    { "index": "WEAI", "publisher": "IFPRI", "coverage": "Survey-based, agriculture", "frequency": "Project-based", "investable": "No" },
+    { "index": "SHE Index (EY)", "publisher": "SHE Community / EY", "coverage": "Companies", "frequency": "Annual", "investable": "No" },
+    { "index": "Women, Business & the Law", "publisher": "World Bank", "coverage": "Global", "frequency": "Annual", "investable": "No" },
+    { "index": "Gender Inequality Index", "publisher": "UNDP", "coverage": "Global", "frequency": "Annual", "investable": "No" }
+  ],
+  "closing": "Every index above represents years of rigorous work by institutions we respect — and several of them are inputs to the SHE Score itself. We're not trying to replace them. We're building the missing layer on top: the one that turns measurement into market incentive. They tell the world how women are doing. The SHE Score makes the world's answer worth something."
+}

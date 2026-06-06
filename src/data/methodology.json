@@ -1,0 +1,65 @@
+{
+  "intro": [
+    "The SHE Score is a data-backed 0–100 measure of how good life is for women in a country — where higher always means better. It is built from independent institutional data (UN Women, World Bank, WHO, UNODC, UNESCO and ILO) and published annually, quarterly for registered governments.",
+    "The published score (v2) is computed from five LIVE pillars using the formula below. Four further pillars are part of the full SHE framework but are still in validation and do not yet affect published scores or $SHE supply mechanics."
+  ],
+  "disclaimer": "The SHE Score is an independent project and is not affiliated with, endorsed by, or derived from the UNDP/UN Women Women's Empowerment Index, the SHE Index powered by EY, or any other index referenced on this site.",
+  "formula": "SHE Score (v2) = (Empowerment × 0.25) + (Education & Literacy × 0.20) + (Economic Inclusion × 0.20) + (Health & Survival × 0.15) − (Safety / Crime Penalty × 0.20)",
+  "activationDisclaimer": "The SHE Score (v2) is computed from the five LIVE pillars using the published formula. The four v3 pillars — Bodily Autonomy, Dignity & Welfare, Digital & Social, and the expanded Safety & Justice indicators — are part of the full SHE framework but do not yet affect published scores or $SHE supply mechanics. They will be activated individually when each meets our data standard: an independent institutional source covering ≥80% of scored countries, published within two years. Track activation status on the methodology page.",
+  "livePillars": [
+    { "name": "Empowerment", "weight": "25%", "desc": "Parliamentary seats, ministerial roles, legal rights, freedom of movement." },
+    { "name": "Education & Literacy", "weight": "20%", "desc": "Literacy, enrollment, STEM participation, completion rates." },
+    { "name": "Economic Inclusion", "weight": "20%", "desc": "Pay gap, formal employment, banking access, property rights." },
+    { "name": "Health & Survival", "weight": "15%", "desc": "Maternal mortality, life expectancy, anaemia, cancer screening." },
+    { "name": "Safety (Crime Penalty)", "weight": "−20%", "desc": "Rape, femicide, dowry violence — subtracted from the composite, never added." }
+  ],
+  "v3Pillars": [
+    { "name": "Bodily Autonomy", "indicators": "Period poverty, child marriage, FGM, reproductive rights", "source": "Candidate: UNICEF/WHO JMP menstrual-health module", "gap": "No institutional 105-country dataset for period poverty." },
+    { "name": "Dignity & Welfare", "indicators": "Widow rights, caregiver burden, food insecurity, mental health", "source": "Candidate: OECD time-use, FAO FIES food-insecurity scale", "gap": "No ≥80%-coverage institutional dataset for unpaid-care burden." },
+    { "name": "Digital & Social", "indicators": "Online harassment, internet & mobile gender gaps", "source": "Candidate: ITU, GSMA Mobile Gender Gap", "gap": "Online-harassment prevalence lacks comparable cross-country institutional data." },
+    { "name": "Safety & Justice (expanded indicators)", "indicators": "Police responsiveness, legal aid access, honour-based violence", "source": "Candidate: World Justice Project, UNODC", "gap": "No ≥80%-coverage institutional dataset for police responsiveness to gender-based violence." }
+  ],
+  "sources": [
+    "UN Women",
+    "World Bank Gender Data Portal & Women, Business and the Law (WBL)",
+    "World Health Organization (WHO)",
+    "UN Office on Drugs and Crime (UNODC)",
+    "UNESCO",
+    "International Labour Organization (ILO)",
+    "OECD (SIGI)"
+  ],
+  "cadence": "Scores are published annually, and quarterly for registered governments. The published score is computed solely from the five LIVE pillars using the v2 formula above.",
+  "futureResearch": "Future research — not part of score calculation or $SHE mechanics: an experimental signal layer that surfaces qualitative momentum between publications from public news and academic sources. It is exploratory context only and never affects the published score or token supply.",
+  "faq": [
+    {
+      "q": "Why do only five of the nine pillars count today?",
+      "a": "Because every live indicator must meet our published data standard — an independent institutional source covering at least 80% of scored countries, published within the last two years. The four v3 pillars are part of the full framework and activate one at a time as they qualify; until then they do not affect published scores or $SHE supply.",
+      "link": "",
+      "linkText": ""
+    },
+    {
+      "q": "There are already many gender indices. Why a new one?",
+      "a": "Existing indices measure; none of them move money. The WEF, UNDP, Georgetown and OECD indices are research instruments — published as reports, read by policymakers, with no economic consequence attached to a score rising or falling. The SHE Score is built to be the accountability layer on top of that measurement tradition: it updates quarterly for registered governments instead of annually or biennially, it scores sub-nationally (Indian states today) so individual programs are visible, and it is the only gender index wired to a financial instrument — $SHE supply expands when the score rises and contracts when it falls. We use the same institutional data the great indices use. The difference is what happens when the number changes.",
+      "link": "/index-landscape",
+      "linkText": "Compare every major gender index"
+    },
+    {
+      "q": "Is the SHE Score the same as the UN's Women's Empowerment Index?",
+      "a": "No. The SHE Score is an independent index with a different methodology and publisher (SHE Foundation), and unlike the UN/UN Women WEI it is wired to a financial instrument ($SHE). See exactly how the two relate — alongside every other major gender index — on The Landscape.",
+      "link": "/index-landscape",
+      "linkText": "The Landscape"
+    },
+    {
+      "q": "How often is the SHE Score updated?",
+      "a": "It is published annually, and quarterly for registered governments. We do not update the published score weekly.",
+      "link": "",
+      "linkText": ""
+    },
+    {
+      "q": "Are third-party index scores used to calculate the SHE Score or $SHE?",
+      "a": "No. Where we show third-party scores (e.g. on a country page), they are for reference only — they are never inputs to the SHE Score or to $SHE token-supply mechanics.",
+      "link": "",
+      "linkText": ""
+    }
+  ]
+}
