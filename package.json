@@ -6,7 +6,7 @@
   "description": "shescore.org — open data on women's empowerment in 105 countries. Published by the SHE Score Foundation.",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/gen-fallback.mjs && node scripts/gen-sitemap.mjs",
+    "prebuild": "node scripts/check-config-sync.mjs && node scripts/gen-fallback.mjs && node scripts/gen-sitemap.mjs",
     "build": "vite build",
     "postbuild": "node scripts/prerender.mjs && node scripts/check-firewall.mjs",
     "build:dev": "vite build --mode development",
