@@ -416,7 +416,14 @@ export default function Scores() {
                   {selectedDisplay && <> Dashed line = {selectedDisplay.country} ({selectedDisplay.she_score?.toFixed(1)}).</>}
                 </p>
               </div>
-              <span className="text-xs text-muted-foreground shrink-0">peak = most countries</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2.5 py-1" style={{ color: INDEX_COLORS[selectedIndex], borderColor: `${INDEX_COLORS[selectedIndex]}66` }}>
+                  <span className="h-2 w-2 rounded-full" style={{ background: INDEX_COLORS[selectedIndex] }} /> Highlighting {selectedIndex}
+                </span>
+                {selectedIndex !== "SHE Score" && (
+                  <button onClick={() => setSelectedIndex("SHE Score")} className="text-xs text-muted-foreground hover:text-foreground">Reset</button>
+                )}
+              </div>
             </div>
             <div className="mt-3">
               <ResponsiveContainer width="100%" height={230}>
@@ -428,9 +435,9 @@ export default function Scores() {
                     <ReferenceLine x={selectedDisplay.she_score} stroke="#E0B84E" strokeDasharray="4 3"
                       label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
                   )}
-                  <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.4} dot={false} isAnimationActive={false} />
+                  <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.18} dot={false} isAnimationActive={false} />
                   {COMPANION_INDEXES.map((idx) => (
-                    <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.4} dot={false} isAnimationActive={false} />
+                    <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.18} dot={false} isAnimationActive={false} />
                   ))}
                 </LineChart>
               </ResponsiveContainer>
