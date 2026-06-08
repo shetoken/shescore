@@ -111,14 +111,14 @@ function IndexCard({ code, desc, value, native, color, badge, title, formula, no
   return (
     <Tooltip delayDuration={100}>
       <TooltipTrigger asChild>
-        <div onClick={onClick} className="rounded-lg px-4 py-2.5 cursor-pointer border-2 transition-smooth"
+        <div onClick={onClick} className="rounded-lg px-3 py-1.5 cursor-pointer border-2 transition-smooth"
           style={{ borderColor: selected ? accent : (native ? accent : `${color}55`), background: `${accent}${selected ? "26" : "14"}`, boxShadow: selected ? `0 0 0 2px ${accent}` : undefined }}>
           <div className="flex items-center justify-between gap-1.5">
-            <div className="text-xs font-bold" style={{ color: accent }}>{code}</div>
-            {badge && <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground border border-border rounded px-1 py-px">{badge}</span>}
+            <div className="text-[11px] font-bold" style={{ color: accent }}>{code}</div>
+            {badge && <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground border border-border rounded px-1">{badge}</span>}
           </div>
-          <div className="font-serif text-xl font-bold tnum" style={{ color: accent }}>{value}</div>
-          <div className="text-[10px] text-muted-foreground max-w-[130px] leading-tight">{desc}</div>
+          <div className="font-serif text-lg font-bold tnum leading-tight" style={{ color: accent }}>{value}</div>
+          <div className="text-[10px] text-muted-foreground max-w-[120px] leading-tight">{desc}</div>
         </div>
       </TooltipTrigger>
       {/* Radix tooltip auto-flips/clamps to stay in the viewport (no clipping). */}
@@ -331,7 +331,7 @@ export default function Scores() {
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
 
-      <div className="container max-w-6xl py-8 space-y-8">
+      <div className="container max-w-7xl py-4 space-y-4">
         {/* Header */}
         <header>
           <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
@@ -451,7 +451,7 @@ export default function Scores() {
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
                   </div>
                 ) : null}
-                <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code}
+                <WorldMap countries={countries} mapHeight={380} onSelect={setSelected} selectedIso={selected?.iso_code}
                   highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                   scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
               </div>
