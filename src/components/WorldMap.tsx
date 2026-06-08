@@ -53,19 +53,15 @@ function scoreToColor(score: number | undefined | null): string {
   return "#E0606A";                      // Critical
 }
 
-const TIER_LABELS: Record<number, string> = {
-  1: "Leading",
-  2: "Advancing",
-  3: "Lagging",
-  4: "Critical",
-};
-
-const TIER_COLORS: Record<number, string> = {
-  1: "text-emerald-400",
-  2: "text-yellow-400",
-  3: "text-orange-400",
-  4: "text-red-400",
-};
+// Severity category from a SHE Score (matches the dashboard's bands).
+function scoreBandLabel(score: number | null | undefined): string {
+  if (score == null) return "No data";
+  if (score >= 75) return "Very High";
+  if (score >= 60) return "High";
+  if (score >= 45) return "Moderate";
+  if (score >= 30) return "Low";
+  return "Critical";
+}
 
 interface TooltipState {
   country: string;
@@ -208,10 +204,10 @@ export function WorldMap({
 
   // Legend items (shared by the bottom + left layouts).
   const legendSwatches = [
-    { color: "#3E9D6F", label: "75+  Leading" },
-    { color: "#5BC289", label: "60–74  Leading" },
-    { color: "#E0B84E", label: "45–59  Advancing" },
-    { color: "#E89C5A", label: "30–44  Lagging" },
+    { color: "#3E9D6F", label: "75+  Very High" },
+    { color: "#5BC289", label: "60–74  High" },
+    { color: "#E0B84E", label: "45–59  Moderate" },
+    { color: "#E89C5A", label: "30–44  Low" },
     { color: "#E0606A", label: "<30  Critical" },
     { color: "#1e293b", label: "No data" },
   ];
@@ -304,8 +300,8 @@ export function WorldMap({
               {indexLabel === "SHE Score" && (
                 <>
                   {" · "}
-                  <span className={TIER_COLORS[tooltip.tier]}>
-                    {TIER_LABELS[tooltip.tier]}
+                  <span className="font-semibold" style={{ color: scoreToColor(tooltip.score) }}>
+                    {scoreBandLabel(tooltip.score)}
                   </span>
                 </>
               )}

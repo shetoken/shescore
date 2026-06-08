@@ -41,12 +41,18 @@ function companionScore(iso: string, code: string, avg: number) {
   return Math.max(2, Math.min(98, Math.round((avg + off) * 10) / 10));
 }
 
-const TIERS: Record<number, { label: string; color: string }> = {
-  1: { label: "Tier 1 · Leading", color: "#5BC289" },
-  2: { label: "Tier 2 · Advancing", color: "#E0B84E" },
-  3: { label: "Tier 3 · Lagging", color: "#E89C5A" },
-  4: { label: "Tier 4 · Critical", color: "#E0606A" },
-};
+// Severity categories ("bands") by SHE Score — same thresholds & colours as the
+// map. Five levels: Very High (75+) / High (60–74) / Moderate / Low / Critical.
+const BAND_DEFS = [
+  { key: 1, min: 75, label: "Very High", color: "#3E9D6F" },
+  { key: 2, min: 60, label: "High",      color: "#5BC289" },
+  { key: 3, min: 45, label: "Moderate",  color: "#E0B84E" },
+  { key: 4, min: 30, label: "Low",       color: "#E89C5A" },
+  { key: 5, min: 0,  label: "Critical",  color: "#E0606A" },
+];
+const BANDS: Record<number, { key: number; min: number; label: string; color: string }> =
+  Object.fromEntries(BAND_DEFS.map((b) => [b.key, b]));
+const bandKey = (score?: number | null) => (BAND_DEFS.find((b) => (score ?? 0) >= b.min) ?? BAND_DEFS[4]).key;
 
 type Formula = { label: string; weight?: string };
 
@@ -181,12 +187,12 @@ export default function Scores() {
     return [...list].sort((a, b) => (asc ? a.she_score - b.she_score : b.she_score - a.she_score));
   }, [countries, search, asc]);
 
-  // Tier distribution (by country count and by population) from the data.
-  const tierData = useMemo(() => [1, 2, 3, 4].map((t) => {
-    const inTier = countries.filter((c) => c.tier === t);
+  // Distribution by band (count + population), derived from each country's score.
+  const tierData = useMemo(() => BAND_DEFS.map((b) => {
+    const inBand = countries.filter((c) => bandKey(c.she_score) === b.key);
     return {
-      name: TIERS[t].label, count: inTier.length, color: TIERS[t].color,
-      pop: inTier.reduce((s, c) => s + (c.population_millions ?? 0), 0),
+      name: b.label, count: inBand.length, color: b.color,
+      pop: inBand.reduce((s, c) => s + (c.population_millions ?? 0), 0),
     };
   }), [countries]);
   const totalPop = useMemo(() => countries.reduce((s, c) => s + (c.population_millions ?? 0), 0), [countries]);
@@ -207,11 +213,11 @@ export default function Scores() {
 
   const global = version === "v3" ? meanScore(countries) : (summary?.global_she_score ?? null);
   const totalC = countries.length;
-  // Version-aware highest/lowest + tier counts for the summary cards.
+  // Version-aware highest/lowest + band counts for the summary cards.
   const ranked = [...countries].sort((a, b) => b.she_score - a.she_score);
   const highC = ranked[0], lowC = ranked[ranked.length - 1];
-  const tier1 = countries.filter((c) => c.tier === 1).length;
-  const tier4 = countries.filter((c) => c.tier === 4).length;
+  const highPlus = countries.filter((c) => (c.she_score ?? 0) >= 60).length;  // Very High + High
+  const critical = countries.filter((c) => (c.she_score ?? 0) < 30).length;
   // Global average for each pillar (shown in the panel when no country is selected).
   const globalPillars = useMemo(() => {
     const out: Record<string, number> = {};
@@ -229,19 +235,19 @@ export default function Scores() {
 
   // Cross-highlight: countries within ±2.5 of the hovered SHE Score → brighten on the map.
   const countriesNear = (score: number) => countries.filter((c) => Math.abs((c.she_score ?? 0) - score) <= 2.5);
-  // The active tier: hovering a donut slice (transient) wins over a clicked one (sticky).
+  // The active band: hovering a donut slice (transient) wins over a clicked one (sticky).
   const activeTier = hoverTier ?? selectedTier;
   // Countries to brighten on the map: hovered-score neighbours (KDE/map hover), else
-  // the active donut tier.
+  // the active donut band.
   const highlightIsos = useMemo(() => {
     if (hoverScore != null) return new Set(countriesNear(hoverScore).map((c) => c.iso_code));
-    if (activeTier != null) return new Set(countries.filter((c) => c.tier === activeTier).map((c) => c.iso_code));
+    if (activeTier != null) return new Set(countries.filter((c) => bandKey(c.she_score) === activeTier).map((c) => c.iso_code));
     return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hoverScore, activeTier, countries]);
-  // Donut slices to light up: tiers of hovered countries, else the active tier.
+  // Donut slices to light up: bands of hovered countries, else the active band.
   const litTiers = useMemo(() => {
-    if (hoverScore != null) return new Set(countriesNear(hoverScore).map((c) => c.tier));
+    if (hoverScore != null) return new Set(countriesNear(hoverScore).map((c) => bandKey(c.she_score)));
     if (activeTier != null) return new Set([activeTier]);
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,34 +260,38 @@ export default function Scores() {
     return new Map(countries.map((c) => [c.iso_code, companionScore(c.iso_code, selectedIndex, idx.value)]));
   }, [selectedIndex, countries]);
 
-  // Donut data labels (percentage on each slice) + leader lines.
+  // Donut data labels pushed to the left/right edges (not over the plot) with
+  // elbow leader lines, for readability.
   const RADIAN = Math.PI / 180;
-  // Compact on-slice label: tier name + % (full detail is in the hover tooltip).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sliceLabel = ({ cx, cy, midAngle, outerRadius, percent, index }: any) => {
     if (percent < 0.02) return null;
     const t = tierData[index];
-    const short = t.name.split(" · ")[1] || t.name;
-    const r = outerRadius + 16;
-    const x = cx + r * Math.cos(-midAngle * RADIAN);
-    const y = cy + r * Math.sin(-midAngle * RADIAN);
-    const anchor = x > cx ? "start" : "end";
+    const sin = Math.sin(-midAngle * RADIAN);
+    const cos = Math.cos(-midAngle * RADIAN);
+    const right = cos >= 0;
+    const labelX = cx + (right ? 1 : -1) * (outerRadius + 30);
+    const labelY = cy + (outerRadius + 4) * sin;
+    const anchor = right ? "start" : "end";
     return (
-      <text x={x} y={y} fill={t.color} textAnchor={anchor} dominantBaseline="central">
-        <tspan x={x} dy="-1.05em" fontSize={12} fontWeight={700}>{short}</tspan>
-        <tspan x={x} dy="1.15em" fontSize={12} fontWeight={600}>{(percent * 100).toFixed(1)}%</tspan>
-        <tspan x={x} dy="1.1em" fontSize={10} fontWeight={400} fill="hsl(var(--muted-foreground))">{womenM(t.pop).toLocaleString()}M women</tspan>
+      <text x={labelX} y={labelY} fill={t.color} textAnchor={anchor} dominantBaseline="central">
+        <tspan x={labelX} dy="-1.0em" fontSize={11} fontWeight={700}>{t.name}</tspan>
+        <tspan x={labelX} dy="1.1em" fontSize={11} fontWeight={600}>{(percent * 100).toFixed(1)}%</tspan>
+        <tspan x={labelX} dy="1.05em" fontSize={9} fontWeight={400} fill="hsl(var(--muted-foreground))">{womenM(t.pop).toLocaleString()}M women</tspan>
       </text>
     );
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const leaderLine = ({ cx, cy, midAngle, outerRadius, percent, index }: any) => {
     if (percent < 0.02) return <path />;
-    const x1 = cx + outerRadius * Math.cos(-midAngle * RADIAN);
-    const y1 = cy + outerRadius * Math.sin(-midAngle * RADIAN);
-    const x2 = cx + (outerRadius + 16) * Math.cos(-midAngle * RADIAN);
-    const y2 = cy + (outerRadius + 16) * Math.sin(-midAngle * RADIAN);
-    return <path d={`M${x1},${y1}L${x2},${y2}`} stroke={tierData[index]?.color} strokeOpacity={0.5} fill="none" />;
+    const sin = Math.sin(-midAngle * RADIAN);
+    const cos = Math.cos(-midAngle * RADIAN);
+    const right = cos >= 0;
+    const sx = cx + outerRadius * cos;                 // slice outer edge
+    const sy = cy + outerRadius * sin;
+    const my = cy + (outerRadius + 4) * sin;           // label row y
+    const ex = cx + (right ? 1 : -1) * (outerRadius + 26);
+    return <path d={`M${sx},${sy} L${sx + (right ? 6 : -6)},${my} L${ex},${my}`} stroke={tierData[index]?.color} strokeOpacity={0.5} fill="none" />;
   };
 
   // KDE hover: per-index reading (relative density bar) + the full list of countries at the score.
@@ -364,17 +374,17 @@ export default function Scores() {
   const donutCard = (
     <div className="rounded-lg border border-border bg-card p-3">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h3 className="text-sm font-semibold">Distribution by tier</h3>
+        <h3 className="text-sm font-semibold">Distribution by category</h3>
         <div className="inline-flex rounded-md border border-border overflow-hidden text-[11px]">
           <button onClick={() => setTierBy("countries")} className={`px-2 py-1 ${tierBy === "countries" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>Countries</button>
           <button onClick={() => setTierBy("women")} className={`px-2 py-1 border-l border-border ${tierBy === "women" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>Women</button>
         </div>
       </div>
       <div className="relative mt-1">
-        <ResponsiveContainer width="100%" height={196}>
-          <PieChart margin={{ top: 4, bottom: 4, left: 24, right: 24 }}>
+        <ResponsiveContainer width="100%" height={210}>
+          <PieChart margin={{ top: 6, bottom: 6, left: 72, right: 72 }}>
             <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
-              innerRadius={42} outerRadius={62} paddingAngle={2} stroke="none" isAnimationActive={false}
+              innerRadius={40} outerRadius={58} paddingAngle={2} stroke="none" isAnimationActive={false}
               label={sliceLabel} labelLine={leaderLine} cursor="pointer"
               onMouseEnter={(_, i) => setHoverTier(i + 1)} onMouseLeave={() => setHoverTier(null)}
               onClick={(_, i) => setSelectedTier((t) => (t === i + 1 ? null : i + 1))}>
@@ -425,7 +435,7 @@ export default function Scores() {
       <div>
         <h3 className="!text-base font-semibold !mb-1.5">Companion indexes</h3>
         <ul className="text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-0.5 leading-tight">
-          {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.title}</li>)}
+          {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="font-semibold" style={{ color: INDEX_COLORS[idx.code] }}>{idx.code}</span> — {idx.title}</li>)}
         </ul>
         <p className="text-muted-foreground mt-1.5">Reference only; in development; never inputs to the SHE Score.</p>
       </div>
@@ -550,7 +560,7 @@ export default function Scores() {
                 )}
                 {selectedTier != null ? (
                   <div className="mb-2 text-xs text-magenta-ink">
-                    Showing <span className="font-medium">{TIERS[selectedTier].label}</span> · {countries.filter((c) => c.tier === selectedTier).length} countries.{" "}
+                    Showing <span className="font-medium">{BANDS[selectedTier].label}</span> · {countries.filter((c) => bandKey(c.she_score) === selectedTier).length} countries.{" "}
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
                   </div>
                 ) : null}
@@ -560,8 +570,8 @@ export default function Scores() {
                     mapHeader={<MetricsStrip stats={[
                       { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
                       { label: "Lowest", value: lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—", color: C_BAD },
-                      { label: "Tier 1", value: `${tier1} countries`, color: C_GOOD },
-                      { label: "Critical", value: `${tier4} countries`, color: C_BAD },
+                      { label: "High +", value: `${highPlus} countries`, color: C_GOOD },
+                      { label: "Critical", value: `${critical} countries`, color: C_BAD },
                     ]} />}
                     highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                     scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
@@ -572,7 +582,7 @@ export default function Scores() {
               </div>
               {/* RIGHT: country panel + explore tiles (one row) */}
               <div className="flex flex-col gap-3">
-                <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} tier1={tier1} tier4={tier4} totalPop={totalPop} />
+                <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} highPlus={highPlus} critical={critical} totalPop={totalPop} />
                 <div className="grid grid-cols-2 gap-3">{exploreTiles}</div>
                 {sheScoreTile}
               </div>
@@ -586,7 +596,7 @@ export default function Scores() {
                   <th className="text-left font-medium px-4 py-3">Country</th>
                   <th className="text-left font-medium px-4 py-3 hidden md:table-cell">Region</th>
                   <th className="text-left font-medium px-4 py-3"><button onClick={() => setAsc((v) => !v)} className="inline-flex items-center gap-1 hover:text-foreground">SHE Score <ArrowUpDown className="h-3 w-3" /></button></th>
-                  <th className="text-left font-medium px-4 py-3 hidden sm:table-cell w-28">Tier</th>
+                  <th className="text-left font-medium px-4 py-3 hidden sm:table-cell w-28">Category</th>
                 </tr></thead>
                 <tbody>
                   {rows.map((c, i) => (
@@ -600,7 +610,7 @@ export default function Scores() {
                           <span className="tnum font-semibold w-10">{c.she_score?.toFixed(1)}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 hidden sm:table-cell">{TIERS[c.tier] && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: TIERS[c.tier].color, background: `${TIERS[c.tier].color}1f` }}>{TIERS[c.tier].label.split(" · ")[0]}</span>}</td>
+                      <td className="px-4 py-2.5 hidden sm:table-cell">{(() => { const b = BANDS[bandKey(c.she_score)]; return <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: b.color, background: `${b.color}1f` }}>{b.label}</span>; })()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -617,8 +627,8 @@ export default function Scores() {
   );
 }
 
-function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, tier4, totalPop }: {
-  country: CountryWEI | null; onClose: () => void; global: number | null; globalPillars: Record<string, number>; count: number; tier1: number; tier4: number; totalPop: number;
+function SelectedPanel({ country, onClose, global, globalPillars, count, highPlus, critical, totalPop }: {
+  country: CountryWEI | null; onClose: () => void; global: number | null; globalPillars: Record<string, number>; count: number; highPlus: number; critical: number; totalPop: number;
 }) {
   if (!country) {
     return (
@@ -629,11 +639,11 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
           <div className="font-serif text-2xl font-bold tnum text-gold">{global != null ? global.toFixed(1) : "—"}</div>
           <div className="text-xs text-muted-foreground">SHE Score / 100</div>
         </div>
-        {/* tier summary — mirrors the country panel's tier tag row so the two
+        {/* category summary — mirrors the country panel's tag row so the two
             panels (and therefore the map) stay the same height */}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
-          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_GOOD, background: `${C_GOOD}1f` }}>{tier1} Leading</span>
-          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_BAD, background: `${C_BAD}1f` }}>{tier4} Critical</span>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_GOOD, background: `${C_GOOD}1f` }}>{highPlus} High +</span>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_BAD, background: `${C_BAD}1f` }}>{critical} Critical</span>
           <span className="text-xs text-muted-foreground tnum">{womenM(totalPop).toLocaleString()}M women</span>
         </div>
         <div className="mt-3 space-y-2.5">
@@ -671,13 +681,13 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         <div className="text-xs text-muted-foreground">SHE Score / 100</div>
       </div>
 
-      {/* Tier tag + women stats */}
+      {/* Category tag + women stats */}
       <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
-        {TIERS[country.tier] && (
-          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: TIERS[country.tier].color, background: `${TIERS[country.tier].color}1f` }}>
-            {TIERS[country.tier].label}
+        {(() => { const b = BANDS[bandKey(country.she_score)]; return (
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: b.color, background: `${b.color}1f` }}>
+            {b.label}
           </span>
-        )}
+        ); })()}
         <span className="text-xs text-muted-foreground tnum">{fmtWomenM(country.population_millions)}M women <span className="text-foreground/55">({sharePctStr})</span></span>
       </div>
 
