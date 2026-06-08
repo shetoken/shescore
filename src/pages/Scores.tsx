@@ -418,6 +418,25 @@ export default function Scores() {
     </>
   );
 
+  // Reference card (Companion indexes + Sources) — placed under the charts in
+  // the left column so it fills the space beside the taller right column.
+  const referenceCard = (
+    <div className="rounded-lg border border-border bg-card p-4 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      <div>
+        <h3 className="font-semibold mb-2">Companion indexes</h3>
+        <ul className="text-muted-foreground space-y-1">
+          {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.title}</li>)}
+        </ul>
+        <p className="text-muted-foreground mt-2 text-xs">Reference only; in development; never inputs to the SHE Score.</p>
+      </div>
+      <div>
+        <h3 className="font-semibold mb-2">Sources &amp; methodology</h3>
+        <p className="text-muted-foreground">Built from UN Women, World Bank, WHO, UNODC, UNESCO and ILO data. All scores normalised 0–100; higher is better for women. Scores are indicative and for research and awareness.</p>
+        <Link to="/methodology" className="text-magenta-ink hover:underline mt-1 inline-block">Read the methodology →</Link>
+      </div>
+    </div>
+  );
+
   return (
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
@@ -542,6 +561,7 @@ export default function Scores() {
                 </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">{kdeCard}{donutCard}</div>
+                {referenceCard}
               </div>
               {/* RIGHT: country panel + explore tiles */}
               <div className="flex flex-col gap-3">
@@ -580,27 +600,9 @@ export default function Scores() {
             </div>
             <div className="mt-3 grid sm:grid-cols-2 gap-3">{kdeCard}{donutCard}</div>
             <div className="mt-3 grid sm:grid-cols-2 gap-3">{exploreTiles}</div>
+            <div className="mt-3">{referenceCard}</div>
             </>
           )}
-        </section>
-
-
-        {/* Reference — spans the KDE + donut (left column) width */}
-        <section className="grid lg:grid-cols-[1fr_320px] gap-4">
-          <div className="rounded-lg border border-border bg-card p-4 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <div>
-              <h3 className="font-semibold mb-2">Companion indexes</h3>
-              <ul className="text-muted-foreground space-y-1">
-                {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.title}</li>)}
-              </ul>
-              <p className="text-muted-foreground mt-2 text-xs">Reference only; in development; never inputs to the SHE Score.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Sources &amp; methodology</h3>
-              <p className="text-muted-foreground">Built from UN Women, World Bank, WHO, UNODC, UNESCO and ILO data. All scores normalised 0–100; higher is better for women. Scores are indicative and for research and awareness.</p>
-              <Link to="/methodology" className="text-magenta-ink hover:underline mt-1 inline-block">Read the methodology →</Link>
-            </div>
-          </div>
         </section>
       </div>
     </Layout>
