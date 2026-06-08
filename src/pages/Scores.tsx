@@ -144,7 +144,7 @@ function IndexCard({ code, desc, value, native, color, badge, title, formula, no
 /* Headline metrics — one-line strip above the map. */
 function MetricsStrip({ stats }: { stats: { label: string; value: string; color?: string }[] }) {
   return (
-    <div className="mb-2 shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-card px-4 py-2 text-sm">
+    <div className="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-card px-3.5 py-1.5 text-xs">
       {stats.map((s, i) => (
         <span key={s.label} className="inline-flex items-baseline gap-1.5">
           {i > 0 && <span className="text-muted-foreground/40 mr-1.5">·</span>}
@@ -422,12 +422,6 @@ export default function Scores() {
           ) : view === "map" ? (
             <div className="grid lg:grid-cols-[1fr_320px] gap-4 items-stretch">
               <div className="flex flex-col min-h-0">
-                <MetricsStrip stats={[
-                  { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
-                  { label: "Lowest", value: lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—", color: C_BAD },
-                  { label: "Tier 1", value: `${tier1} countries`, color: C_GOOD },
-                  { label: "Critical", value: `${tier4} countries`, color: C_BAD },
-                ]} />
                 {selectedIndex !== "SHE Score" && (
                   <div className="mb-2 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
                     Map shaded by <span className="font-medium" style={{ color: INDEX_COLORS[selectedIndex] }}>{selectedIndex}</span> — hover a country for its {selectedIndex} score.
@@ -444,6 +438,12 @@ export default function Scores() {
                 <div className="flex-1 min-h-0">
                   <WorldMap countries={countries} mapHeight={240} onSelect={setSelected} selectedIso={selected?.iso_code}
                     legendSide="left"
+                    mapHeader={<MetricsStrip stats={[
+                      { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
+                      { label: "Lowest", value: lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—", color: C_BAD },
+                      { label: "Tier 1", value: `${tier1} countries`, color: C_GOOD },
+                      { label: "Critical", value: `${tier4} countries`, color: C_BAD },
+                    ]} />}
                     highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                     scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
                 </div>

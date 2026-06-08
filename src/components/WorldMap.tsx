@@ -102,6 +102,9 @@ interface WorldMapProps {
   /** Optional content rendered above the left-stacked legend (e.g. a compact
       readout for the selected country). Only used when legendSide="left". */
   legendTop?: React.ReactNode;
+  /** Optional content rendered above the map canvas, matching the map's width
+      (not the legend column). Only used when legendSide="left". */
+  mapHeader?: React.ReactNode;
   /** When set & non-empty, these ISO-A3 countries are brightened and the rest are dimmed
       (used to cross-highlight from the distribution chart on hover). */
   highlightIsos?: Set<string>;
@@ -122,6 +125,7 @@ export function WorldMap({
   hideLegend,
   legendSide = "bottom",
   legendTop,
+  mapHeader,
   highlightIsos,
   onHover,
 }: WorldMapProps) {
@@ -231,6 +235,56 @@ export function WorldMap({
     </div>
   );
 
+  const mapCanvas = (
+    <ComposableMap
+      projection="geoMercator"
+      projectionConfig={{ scale: 138, center: [10, 18] }}
+      height={mapHeight}
+      style={{ width: "100%", height: "auto" }}
+    >
+      <ZoomableGroup zoom={1} minZoom={0.7} maxZoom={8}>
+        <Geographies geography={GEO_URL}>
+          {({ geographies }) =>
+            geographies.map((geo) => {
+              const data        = getDataForGeo(geo);
+              const iso3        = isoForGeo(geo);
+              const displayScore = getDisplayScore(iso3);
+              const isSelected  = !!selectedIso && data?.iso_code === selectedIso;
+              // Keep the country's scale colour and mark selection with a white
+              // outline — recolouring it gold collides with the yellow tiers.
+              const fill        = colorFor ? colorFor(displayScore) : scoreToColor(displayScore);
+              const hasData     = !!data;   // clickable if SHE Score record exists
+              const hasSub      = !!data && !!subnationalIsos?.has(data.iso_code);
+              const isHi        = !!highlightIsos && !!data && highlightIsos.has(data.iso_code);
+              const dim         = !!highlightIsos && highlightIsos.size > 0 && !isHi;
+
+              return (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill={fill}
+                  fillOpacity={dim ? 0.2 : 1}
+                  stroke={isHi ? "#ffffff" : isSelected ? "#ffffff" : hasSub ? "#fcd34d" : "#0f172a"}
+                  strokeWidth={isHi ? 1.5 : isSelected ? 2 : hasSub ? 1 : 0.4}
+                  strokeDasharray={hasSub && !isSelected ? "2 1.5" : undefined}
+                  style={{
+                    default: { outline: "none", cursor: hasData ? "pointer" : "default" },
+                    hover: { outline: "none", fill: hasData ? (isSelected ? fill : "#a78bfa") : fill, cursor: hasData ? "pointer" : "default" },
+                    pressed: { outline: "none", fill },
+                  }}
+                  onMouseEnter={(evt) => handleEnter(geo, evt)}
+                  onMouseMove={handleMove}
+                  onMouseLeave={handleLeave}
+                  onClick={() => handleClick(geo)}
+                />
+              );
+            })
+          }
+        </Geographies>
+      </ZoomableGroup>
+    </ComposableMap>
+  );
+
   return (
     <div className={`relative w-full select-none ${legendSide === "left" ? "h-full flex flex-col" : ""}`}>
       {/* Floating tooltip */}
@@ -285,65 +339,22 @@ export function WorldMap({
             <p className="text-[10px] text-muted-foreground/50 leading-snug">
               Scroll to zoom · Drag to pan · Click a country to select
             </p>
+            <div className="border-t border-border/40" />
             {!hideLegend && renderLegend(true)}
           </div>
         )}
-        <div className={`rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] ${legendSide === "left" ? "flex-1 min-w-0 flex items-start justify-center" : ""}`}>
-        <ComposableMap
-          projection="geoMercator"
-          projectionConfig={{ scale: 138, center: [10, 18] }}
-          height={mapHeight}
-          style={{ width: "100%", height: "auto" }}
-        >
-          <ZoomableGroup zoom={1} minZoom={0.7} maxZoom={8}>
-            <Geographies geography={GEO_URL}>
-              {({ geographies }) =>
-                geographies.map((geo) => {
-                  const data        = getDataForGeo(geo);
-                  const iso3        = isoForGeo(geo);
-                  const displayScore = getDisplayScore(iso3);
-                  const isSelected  = !!selectedIso && data?.iso_code === selectedIso;
-                  // Keep the country's scale colour and mark selection with a white
-                  // outline — recolouring it gold collides with the yellow tiers.
-                  const fill        = colorFor ? colorFor(displayScore) : scoreToColor(displayScore);
-                  const hasData     = !!data;   // clickable if SHE Score record exists
-                  const hasSub      = !!data && !!subnationalIsos?.has(data.iso_code);
-                  const isHi        = !!highlightIsos && !!data && highlightIsos.has(data.iso_code);
-                  const dim         = !!highlightIsos && highlightIsos.size > 0 && !isHi;
-
-                  return (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      fill={fill}
-                      fillOpacity={dim ? 0.2 : 1}
-                      stroke={isHi ? "#ffffff" : isSelected ? "#ffffff" : hasSub ? "#fcd34d" : "#0f172a"}
-                      strokeWidth={isHi ? 1.5 : isSelected ? 2 : hasSub ? 1 : 0.4}
-                      strokeDasharray={hasSub && !isSelected ? "2 1.5" : undefined}
-                      style={{
-                        default: {
-                          outline: "none",
-                          cursor: hasData ? "pointer" : "default",
-                        },
-                        hover: {
-                          outline: "none",
-                          fill: hasData ? (isSelected ? fill : "#a78bfa") : fill,
-                          cursor: hasData ? "pointer" : "default",
-                        },
-                        pressed: { outline: "none", fill },
-                      }}
-                      onMouseEnter={(evt) => handleEnter(geo, evt)}
-                      onMouseMove={handleMove}
-                      onMouseLeave={handleLeave}
-                      onClick={() => handleClick(geo)}
-                    />
-                  );
-                })
-              }
-            </Geographies>
-          </ZoomableGroup>
-        </ComposableMap>
-        </div>
+        {legendSide === "left" ? (
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
+            {mapHeader}
+            <div className="flex-1 rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] flex items-start justify-center">
+              {mapCanvas}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a]">
+            {mapCanvas}
+          </div>
+        )}
       </div>
 
       {/* Legend — bottom (horizontal) layout; "left" is rendered in the row above */}
