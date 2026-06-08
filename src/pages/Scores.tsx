@@ -28,6 +28,19 @@ const fmtWomenM = (popMillions?: number | null) => {
   return w >= 10 ? Math.round(w).toLocaleString() : w.toFixed(1);
 };
 
+/* Deterministic placeholder per-country score for a companion index (no live
+   per-country companion data offline). Stable per country+index, spread around
+   the published global average. Clearly labelled illustrative in the UI. */
+function hashStr(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function companionScore(iso: string, code: string, avg: number) {
+  const off = ((hashStr(iso + code) % 1000) / 1000) * 46 - 23;
+  return Math.max(2, Math.min(98, Math.round((avg + off) * 10) / 10));
+}
+
 const TIERS: Record<number, { label: string; color: string }> = {
   1: { label: "Tier 1 · Leading", color: "#5BC289" },
   2: { label: "Tier 2 · Advancing", color: "#E0B84E" },
@@ -209,6 +222,19 @@ export default function Scores() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [hoverScore, countries],
   );
+  // Tiers of the hovered countries → light up those donut slices.
+  const hoverTiers = useMemo(
+    () => (hoverScore == null ? null : new Set(countriesNear(hoverScore).map((c) => c.tier))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hoverScore, countries],
+  );
+  // When a companion index is selected, shade the map by its (placeholder) per-country score.
+  const companionOverride = useMemo(() => {
+    if (selectedIndex === "SHE Score") return undefined;
+    const idx = COMPANION_INDEXES.find((i) => i.code === selectedIndex);
+    if (!idx) return undefined;
+    return new Map(countries.map((c) => [c.iso_code, companionScore(c.iso_code, selectedIndex, idx.value)]));
+  }, [selectedIndex, countries]);
 
   // Donut data labels (percentage on each slice) + leader lines.
   const RADIAN = Math.PI / 180;
@@ -393,14 +419,15 @@ export default function Scores() {
               <div>
                 {selectedIndex !== "SHE Score" && (
                   <div className="mb-2 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-                    Map shows the <span className="font-medium text-foreground">SHE Score</span>. Per-country
-                    <span className="font-medium" style={{ color: INDEX_COLORS[selectedIndex] }}> {selectedIndex}</span> data appears with the live API — the distribution above is filtered to it.
+                    Map shaded by <span className="font-medium" style={{ color: INDEX_COLORS[selectedIndex] }}>{selectedIndex}</span> — hover a country for its {selectedIndex} score.
+                    <span className="italic"> Illustrative placeholder until live per-country data.</span>
                   </div>
                 )}
                 {highlightIsos && highlightIsos.size > 0 && (
                   <div className="mb-2 text-xs text-magenta-ink">Highlighting {highlightIsos.size} countries near SHE Score {Math.round(hoverScore ?? 0)} (hover the distribution chart).</div>
                 )}
-                <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code} highlightIsos={highlightIsos} />
+                <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code}
+                  highlightIsos={highlightIsos} scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
               </div>
               <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} />
             </div>
@@ -503,14 +530,18 @@ export default function Scores() {
                   <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
                     innerRadius={58} outerRadius={88} paddingAngle={2} stroke="none" isAnimationActive={false}
                     label={sliceLabel} labelLine={leaderLine}>
-                    {tierData.map((d) => <Cell key={d.name} fill={d.color} />)}
+                    {tierData.map((d, i) => {
+                      const tier = i + 1;
+                      const lit = hoverTiers?.has(tier);
+                      return <Cell key={d.name} fill={d.color} fillOpacity={hoverTiers && !lit ? 0.22 : 1} stroke={lit ? "#ffffff" : "none"} strokeWidth={lit ? 2 : 0} />;
+                    })}
                   </Pie>
                   <RTooltip content={donutTooltip} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
                 {tierBy === "women" ? (
-                  <><div className="font-serif text-2xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">women's population</div></>
+                  <><div className="font-serif text-2xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">women</div></>
                 ) : (
                   <><div className="font-serif text-3xl font-bold tnum leading-none">{totalC}</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">countries</div></>
                 )}

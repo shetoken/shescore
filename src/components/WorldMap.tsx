@@ -50,9 +50,9 @@ function scoreToColor(score: number | undefined | null): string {
 }
 
 const TIER_LABELS: Record<number, string> = {
-  1: "Preferred",
-  2: "Acceptable",
-  3: "Caution",
+  1: "Leading",
+  2: "Advancing",
+  3: "Lagging",
   4: "Critical",
 };
 
