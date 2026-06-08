@@ -636,13 +636,13 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
           <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_BAD, background: `${C_BAD}1f` }}>{tier4} Critical</span>
           <span className="text-xs text-muted-foreground tnum">{womenM(totalPop).toLocaleString()}M women</span>
         </div>
-        <div className="mt-3 space-y-1.5">
+        <div className="mt-3 space-y-2.5">
           {PILLARS.map((p) => {
             const raw = globalPillars[p.field] ?? 0;
             return (
               <div key={p.key}>
                 <div className="flex justify-between text-[11px] mb-0"><span>{p.label}</span><span className="tnum">{raw}</span></div>
-                <div className="h-1 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
+                <div className="h-1.5 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
               </div>
             );
           })}
@@ -681,13 +681,13 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         <span className="text-xs text-muted-foreground tnum">{fmtWomenM(country.population_millions)}M women <span className="text-foreground/55">({sharePctStr})</span></span>
       </div>
 
-      <div className="mt-2 space-y-0.5">
+      <div className="mt-3 space-y-2.5">
         {PILLARS.map((p) => {
           const raw = (country as unknown as Record<string, number>)[p.field] ?? 0;
           return (
             <div key={p.key}>
               <div className="flex justify-between text-[11px] mb-0"><span>{p.label}</span><span className="tnum">{raw}</span></div>
-              <div className="h-1 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
+              <div className="h-1.5 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
             </div>
           );
         })}
