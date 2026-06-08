@@ -295,15 +295,28 @@ export default function Scores() {
     return <path d={`M${sx},${sy} L${sx + (right ? 6 : -6)},${my} L${ex},${my}`} stroke={tierData[index]?.color} strokeOpacity={0.5} fill="none" />;
   };
 
-  // KDE hover: per-index reading (relative density bar) + the full list of countries at the score.
+  // KDE hover: reads the SELECTED index at the hovered value. For SHE Score this
+  // is the live band + the countries in that range; for a companion index it's
+  // the index's reading (its per-country distribution is illustrative).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const kdeTooltip = ({ active, payload, label }: any) => {
+  const kdeTooltip = ({ active, label }: any) => {
     if (!active) return null;
+    const v = Math.round(label);
+    if (selectedIndex !== "SHE Score") {
+      const idx = COMPANION_INDEXES.find((i) => i.code === selectedIndex);
+      return (
+        <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card max-w-[260px]">
+          <div className="font-semibold" style={{ color: INDEX_COLORS[selectedIndex] }}>{selectedIndex} ≈ {v}</div>
+          {idx && <div className="text-muted-foreground mt-0.5">{idx.title} · global avg {idx.value.toFixed(1)}</div>}
+          <div className="mt-1.5 pt-1.5 border-t border-border text-[11px] text-muted-foreground/70 italic">Illustrative companion distribution — per-country data pending.</div>
+        </div>
+      );
+    }
     const near = countriesNear(label);
     const b = BANDS[bandKey(label)];
     return (
       <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card max-w-[260px]">
-        <div className="font-semibold">SHE Score ≈ {Math.round(label)}
+        <div className="font-semibold" style={{ color: INDEX_COLORS["SHE Score"] }}>SHE Score ≈ {v}
           <span className="ml-1.5 font-medium" style={{ color: b.color }}>· {b.label}</span>
         </div>
         <div className="text-muted-foreground mt-0.5">{near.length} {near.length === 1 ? "country" : "countries"} in this range</div>
@@ -328,7 +341,7 @@ export default function Scores() {
         onMouseLeave={() => setHoverScore(null)}>
         <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
         <YAxis hide domain={[0, 112]} />
-        <RTooltip cursor={{ stroke: "#E24D88", strokeWidth: 1.5, strokeDasharray: "4 3" }} content={kdeTooltip} />
+        <RTooltip cursor={{ stroke: INDEX_COLORS[selectedIndex], strokeWidth: 1.5, strokeDasharray: "4 3" }} content={kdeTooltip} />
         <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.18} dot={false} activeDot={emph("SHE Score") ? { r: 4, stroke: "#fff", strokeWidth: 1.5 } : false} isAnimationActive={false} />
         {COMPANION_INDEXES.map((idx) => (
           <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.18} dot={false} activeDot={emph(idx.code) ? { r: 4, stroke: "#fff", strokeWidth: 1.5 } : false} isAnimationActive={false} />
@@ -338,7 +351,7 @@ export default function Scores() {
             label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
         )}
         {hoverScore != null && (
-          <ReferenceLine x={hoverScore} stroke="#E24D88" strokeWidth={2} strokeDasharray="3 3" />
+          <ReferenceLine x={hoverScore} stroke={INDEX_COLORS[selectedIndex]} strokeWidth={2} strokeDasharray="3 3" />
         )}
       </LineChart>
     </ResponsiveContainer>
