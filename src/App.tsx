@@ -35,7 +35,7 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Routes>
             {PAGES.map((p) => {
               const C = PAGE_COMPONENTS[p.key];

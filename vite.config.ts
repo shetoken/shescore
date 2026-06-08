@@ -5,6 +5,9 @@ import path from "path";
 // shescore.org — institutional data site. Standalone repo (shares components
 // with the token site by copy, per the chosen architecture).
 export default defineConfig(() => ({
+  // GitHub Pages serves project sites under /<repo>/. Set PAGES_BASE=/shescore/
+  // in the Pages build. Default "/" for Vercel/custom-domain (root) hosting.
+  base: process.env.PAGES_BASE || "/",
   server: {
     host: "::",
     port: 8090,
