@@ -207,16 +207,18 @@ export default function Scores() {
   const highC = ranked[0], lowC = ranked[ranked.length - 1];
   const tier1 = countries.filter((c) => c.tier === 1).length;
   const tier4 = countries.filter((c) => c.tier === 4).length;
+  // Global average for each pillar (shown in the panel when no country is selected).
+  const globalPillars = useMemo(() => {
+    const out: Record<string, number> = {};
+    PILLARS.forEach((p) => {
+      const vals = countries.map((c) => (c as unknown as Record<string, number>)[p.field]).filter((v) => typeof v === "number");
+      out[p.field] = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+    });
+    return out;
+  }, [countries]);
 
-  // Default the selected country to Iceland ONCE on first load — so deselecting
-  // (panel ×, or the "global averages" link) sticks and reverts to global scores.
-  const didInitSelection = useRef(false);
-  useEffect(() => {
-    if (!didInitSelection.current && rawCountries.length) {
-      didInitSelection.current = true;
-      setSelected(rawCountries.find((c) => c.iso_code === "ISL") ?? rawCountries[0]);
-    }
-  }, [rawCountries]);
+  // No country is selected on load — the panel shows the GLOBAL pillar breakdown,
+  // and the index cards show global averages. Clicking a country switches to it.
   // Re-resolve the selected country against the versioned list (score is version-aware).
   const selectedDisplay = selected ? (countries.find((c) => c.iso_code === selected.iso_code) ?? selected) : null;
 
@@ -453,7 +455,7 @@ export default function Scores() {
                   highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                   scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
               </div>
-              <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} />
+              <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} />
             </div>
           ) : (
             <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -625,11 +627,28 @@ export default function Scores() {
   );
 }
 
-function SelectedPanel({ country, onClose }: { country: CountryWEI | null; onClose: () => void }) {
+function SelectedPanel({ country, onClose, global, globalPillars, count }: {
+  country: CountryWEI | null; onClose: () => void; global: number | null; globalPillars: Record<string, number>; count: number;
+}) {
   if (!country) {
     return (
-      <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-sm text-muted-foreground text-center lg:sticky lg:top-24">
-        Click a country on the map to see its pillar breakdown.
+      <div className="rounded-lg border border-border bg-card p-5 lg:sticky lg:top-24">
+        <div className="text-xs text-muted-foreground">Global average · {count} countries</div>
+        <div className="font-serif text-xl font-bold">Global</div>
+        <div className="font-serif text-5xl font-bold tnum mt-2 text-gold">{global != null ? global.toFixed(1) : "—"}</div>
+        <div className="text-sm text-muted-foreground">SHE Score / 100</div>
+        <div className="mt-4 space-y-2">
+          {PILLARS.map((p) => {
+            const raw = globalPillars[p.field] ?? 0;
+            return (
+              <div key={p.key}>
+                <div className="flex justify-between text-xs mb-0.5"><span>{p.label}</span><span className="tnum">{raw}</span></div>
+                <div className="h-1.5 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-4 text-xs text-muted-foreground text-center">Click a country on the map for its own breakdown.</p>
       </div>
     );
   }
