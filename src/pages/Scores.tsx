@@ -7,7 +7,8 @@ import { PageHero } from "@/components/design/PageHero";
 import { pageByKey, SITE } from "@/config/manifest";
 import { api, type CountryWEI } from "@/lib/api";
 import { PILLARS } from "@/theme/pillars";
-import { Search, ArrowUpDown } from "lucide-react";
+import { WorldMap } from "@/components/WorldMap";
+import { Search, ArrowUpDown, Map as MapIcon, Table as TableIcon } from "lucide-react";
 
 const TIERS: Record<number, { label: string; color: string }> = {
   1: { label: "Tier 1", color: "#5BC289" },
@@ -31,6 +32,7 @@ export default function Scores() {
   const meta = pageByKey("Scores")!;
   const [search, setSearch] = useState("");
   const [asc, setAsc] = useState(false);
+  const [view, setView] = useState<"table" | "map">("table");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["scores-countries"],
@@ -68,15 +70,21 @@ export default function Scores() {
               className="h-10 w-64 rounded-md border border-border bg-card pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span>Pillars:</span>
-            {PILLARS.map((p) => (
-              <span key={p.key} className="inline-flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full" style={{ background: p.hex }} />{p.label.split(" ")[0]}
-              </span>
-            ))}
+          <div className="inline-flex rounded-md border border-border overflow-hidden text-sm">
+            <button onClick={() => setView("table")} className={`inline-flex items-center gap-1.5 px-3 py-2 ${view === "table" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>
+              <TableIcon className="h-4 w-4" /> Table
+            </button>
+            <button onClick={() => setView("map")} className={`inline-flex items-center gap-1.5 px-3 py-2 border-l border-border ${view === "map" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>
+              <MapIcon className="h-4 w-4" /> Map
+            </button>
           </div>
         </div>
+
+        {!isLoading && !unavailable && view === "map" && (
+          <div className="mb-4">
+            <WorldMap countries={data!.data} mapHeight={460} />
+          </div>
+        )}
 
         {isLoading ? (
           <div className="rounded-lg border border-border bg-card p-10 text-center text-muted-foreground">Loading scores…</div>
@@ -88,7 +96,7 @@ export default function Scores() {
               <Link to="/data" className="text-magenta-ink hover:underline">data page</Link>.
             </p>
           </div>
-        ) : (
+        ) : view === "table" ? (
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -129,7 +137,7 @@ export default function Scores() {
               </table>
             </div>
           </div>
-        )}
+        ) : null}
 
         <p className="source-line">
           Source: SHE Score v2, {SITE.publisher}. Third-party index scores, where shown, are for reference only and are
