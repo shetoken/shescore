@@ -141,22 +141,17 @@ function IndexCard({ code, desc, value, native, color, badge, title, formula, no
   );
 }
 
-function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
+/* Headline metrics card — sits in the index-card row (2×2 mini-stats). */
+function StatsCard({ stats }: { stats: { label: string; value: string; color?: string }[] }) {
   return (
-    <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 min-w-[120px]">
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="text-sm font-semibold tnum leading-tight mt-0.5" style={color ? { color } : undefined}>{value}</div>
+    <div className="rounded-lg border border-border bg-card px-3 py-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 self-stretch content-center">
+      {stats.map((s) => (
+        <div key={s.label}>
+          <div className="text-[9px] uppercase tracking-wider text-muted-foreground leading-tight">{s.label}</div>
+          <div className="text-xs font-semibold tnum leading-tight" style={s.color ? { color: s.color } : undefined}>{s.value}</div>
+        </div>
+      ))}
     </div>
-  );
-}
-
-/* Ultra-compact inline stat pill for the header bar. */
-function StatChip({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs">
-      <span className="uppercase tracking-wider text-[10px] text-muted-foreground">{label}</span>
-      <span className="font-semibold tnum" style={color ? { color } : undefined}>{value}</span>
-    </span>
   );
 }
 
@@ -354,18 +349,14 @@ export default function Scores() {
               <Sparkles className="h-3 w-3" /> {summary?.countries_scored ?? totalC} countries · 2025
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <StatChip label="Highest" value={highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—"} color={C_GOOD} />
-            <StatChip label="Lowest" value={lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—"} color={C_BAD} />
-            <StatChip label="Tier 1" value={`${tier1}`} color={C_GOOD} />
-            <StatChip label="Critical" value={`${tier4}`} color={C_BAD} />
+          <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+            Methodology version
             <select value={version} onChange={(e) => setVersion(e.target.value as ApiVersion)}
-              title="Methodology version"
               className={`h-8 rounded-md border bg-card px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring ${version === "v3" ? "border-gold/60 text-gold" : "border-border"}`}>
               <option value="v2">v2 — Official</option>
               <option value="v3">v3 — Shadow preview</option>
             </select>
-          </div>
+          </label>
         </header>
 
         {/* v3 shadow banner — slim one-line strip */}
@@ -387,6 +378,12 @@ export default function Scores() {
               : "global averages · select a country to see its scores"} · click to filter · hover for methodology
           </p>
           <div className="flex flex-wrap gap-1.5">
+            <StatsCard stats={[
+              { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
+              { label: "Lowest", value: lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—", color: C_BAD },
+              { label: "Tier 1", value: `${tier1} countries`, color: C_GOOD },
+              { label: "Critical", value: `${tier4} countries`, color: C_BAD },
+            ]} />
             <IndexCard
               code="SHE Score" desc="Women's Empowerment" native badge="NATIVE" color={INDEX_COLORS["SHE Score"]}
               value={selectedDisplay ? (selectedDisplay.she_score?.toFixed(1) ?? "—") : (global != null ? global.toFixed(1) : "—")}
@@ -428,8 +425,8 @@ export default function Scores() {
               <p className="mt-1 text-sm text-muted-foreground">The methodology and baseline data remain on the <Link to="/data" className="text-magenta-ink hover:underline">data page</Link>.</p>
             </div>
           ) : view === "map" ? (
-            <div className="grid lg:grid-cols-[1fr_300px] gap-4 items-start">
-              <div>
+            <div className="grid lg:grid-cols-[1fr_320px] gap-4 items-stretch">
+              <div className="flex flex-col min-h-0">
                 {selectedIndex !== "SHE Score" && (
                   <div className="mb-2 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
                     Map shaded by <span className="font-medium" style={{ color: INDEX_COLORS[selectedIndex] }}>{selectedIndex}</span> — hover a country for its {selectedIndex} score.
@@ -445,10 +442,12 @@ export default function Scores() {
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
                   </div>
                 ) : null}
-                <WorldMap countries={countries} mapHeight={270} onSelect={setSelected} selectedIso={selected?.iso_code}
-                  legendSide="left"
-                  highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
-                  scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
+                <div className="flex-1 min-h-0">
+                  <WorldMap countries={countries} mapHeight={270} onSelect={setSelected} selectedIso={selected?.iso_code}
+                    legendSide="left"
+                    highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
+                    scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
+                </div>
               </div>
               <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} />
             </div>

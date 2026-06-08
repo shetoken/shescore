@@ -206,7 +206,7 @@ export function WorldMap({
   ];
   const renderLegend = (vertical: boolean) => (
     <div className={`text-xs text-muted-foreground ${vertical
-      ? "flex flex-col items-start gap-1.5 shrink-0"
+      ? "flex flex-col items-start gap-1.5 shrink-0 self-start"
       : "flex flex-wrap items-center gap-x-4 gap-y-1 justify-start mt-2"}`}>
       <span className="flex items-center gap-1.5">
         <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0 border-2" style={{ backgroundColor: "#475569", borderColor: "#ffffff" }} />
@@ -228,7 +228,7 @@ export function WorldMap({
   );
 
   return (
-    <div className="relative w-full select-none">
+    <div className={`relative w-full select-none ${legendSide === "left" ? "h-full flex flex-col" : ""}`}>
       {/* Floating tooltip */}
       {tooltip && (
         <div
@@ -266,9 +266,9 @@ export function WorldMap({
       )}
 
       {/* Map canvas (+ optional left-stacked legend in the same row) */}
-      <div className={legendSide === "left" && !hideLegend ? "flex items-start gap-4" : ""}>
+      <div className={legendSide === "left" ? "flex items-stretch gap-4 flex-1 min-h-0" : ""}>
         {legendSide === "left" && !hideLegend && renderLegend(true)}
-        <div className={`rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] ${legendSide === "left" ? "flex-1 min-w-0" : ""}`}>
+        <div className={`rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] ${legendSide === "left" ? "flex-1 min-w-0 flex items-start justify-center" : ""}`}>
         <ComposableMap
           projection="geoMercator"
           projectionConfig={{ scale: 138, center: [10, 18] }}
@@ -328,7 +328,7 @@ export function WorldMap({
 
       {/* Legend — bottom (horizontal) layout; "left" is rendered in the row above */}
       {!hideLegend && legendSide !== "left" && renderLegend(false)}
-      <p className="text-left text-[11px] text-muted-foreground/40 mt-1">
+      <p className="text-left text-[11px] text-muted-foreground/40 mt-1 shrink-0">
         Scroll to zoom · Drag to pan · Click a country to select
       </p>
     </div>
