@@ -69,10 +69,10 @@ export const PAGES: PageMeta[] = [
     priority: "0.7", changefreq: "monthly",
   },
   {
-    path: "/explorer", key: "Explorer", nav: true, navLabel: "Explorer",
-    title: "Score Explorer — See How the SHE Score Responds | SHE Score",
+    path: "/explorer", key: "Explorer", nav: false, navLabel: "Score calculator",
+    title: "Score Calculator — See How the SHE Score Responds | SHE Score",
     description:
-      "An illustrative explorer: adjust the five LIVE pillars and watch the v2 SHE Score recompute live from the West Bengal baseline (39.1), including the Kanyashree education scenario (+1.8).",
+      "An illustrative calculator: adjust the five LIVE pillars and watch the SHE Score recompute live (v2 and v3) from the West Bengal baseline (39.1), including the Kanyashree education scenario (+1.8).",
     priority: "0.6", changefreq: "monthly",
   },
   {

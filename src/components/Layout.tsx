@@ -48,6 +48,44 @@ function MethodologyMenu() {
   );
 }
 
+/* Scores ▾ — groups the rankings dashboard + the Score calculator (sub-menu). */
+function ScoresMenu() {
+  const { pathname } = useLocation();
+  const calc = pageByKey("Explorer")!;
+  const active = pathname === "/scores" || pathname === "/explorer";
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={`relative py-1 inline-flex items-center gap-1 outline-none transition-smooth hover:text-magenta-ink ${
+          active
+            ? "text-primary font-medium after:absolute after:inset-x-0 after:-bottom-[1.05rem] after:h-0.5 after:bg-magenta"
+            : "text-foreground/70"
+        }`}
+      >
+        Scores <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[240px]">
+        <DropdownMenuItem asChild>
+          <Link to="/scores" className="cursor-pointer w-full">
+            <div className="w-full text-left">
+              <div className="font-medium">Scores</div>
+              <div className="text-xs text-muted-foreground">The country rankings dashboard</div>
+            </div>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/explorer" className="cursor-pointer w-full">
+            <div className="w-full text-left">
+              <div className="font-medium">{calc.navLabel ?? "Score calculator"}</div>
+              <div className="text-xs text-muted-foreground">See how the score changes when the levers change</div>
+            </div>
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 /* Institutional shell — typographic wordmark, serif/sans system, paper ground.
    No coin imagery anywhere. */
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -62,6 +100,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <Wordmark className="text-xl" />
           <div className="hidden md:flex items-center gap-6 text-sm">
             {NAV_PAGES.map((p) =>
+              p.key === "Scores" ? <ScoresMenu key={p.path} /> :
               p.key === "Methodology" ? <MethodologyMenu key={p.path} /> : (
                 <NavLink
                   key={p.path}

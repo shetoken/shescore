@@ -14,7 +14,7 @@ import { type ApiVersion } from "@/config/apiVersion";
 import { PILLARS } from "@/theme/pillars";
 import { WorldMap } from "@/components/WorldMap";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Search, ArrowUpDown, Map as MapIcon, Table as TableIcon, ShieldAlert, Clock, ArrowRight, X, AlertTriangle, Sparkles, Maximize2 } from "lucide-react";
+import { Search, ArrowUpDown, Map as MapIcon, Table as TableIcon, ShieldAlert, Clock, ArrowRight, X, AlertTriangle, Sparkles, Maximize2, SlidersHorizontal } from "lucide-react";
 
 const C_GOOD = "#5BC289"; // green — high score / leading
 const C_BAD = "#E0606A";  // red — low score / critical
@@ -166,6 +166,7 @@ export default function Scores() {
   const [asc, setAsc] = useState(false);
   const [view, setView] = useState<"map" | "table">("map"); // map default
   const [mapPopout, setMapPopout] = useState(false);        // fullscreen map modal
+  const [kdePopout, setKdePopout] = useState(false);        // fullscreen KDE modal
   const [selected, setSelected] = useState<CountryWEI | null>(null);
   const [version, setVersion] = useState<ApiVersion>("v2");
   const [tierBy, setTierBy] = useState<"countries" | "women">("women");
@@ -297,25 +298,17 @@ export default function Scores() {
   // KDE hover: per-index reading (relative density bar) + the full list of countries at the score.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const kdeTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null;
+    if (!active) return null;
     const near = countriesNear(label);
-    const items = [...payload].filter((p) => p.value != null).sort((a, b) => b.value - a.value);
-    const maxV = Math.max(...items.map((i) => i.value), 1);
+    const b = BANDS[bandKey(label)];
     return (
-      <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card w-[260px]">
-        <div className="font-semibold mb-2">SHE Score ≈ {Math.round(label)} <span className="text-muted-foreground font-normal">· {near.length} countries</span></div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 mb-2">
-          {items.map((p) => (
-            <div key={p.name} className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 truncate" style={{ color: p.color, fontWeight: p.name === selectedIndex ? 700 : 400 }}>
-                <span className="h-2 w-2 rounded-full shrink-0" style={{ background: p.color }} />{p.name}
-              </span>
-              <span className="tnum text-muted-foreground shrink-0">{Math.round(p.value)}</span>
-            </div>
-          ))}
+      <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card max-w-[260px]">
+        <div className="font-semibold">SHE Score ≈ {Math.round(label)}
+          <span className="ml-1.5 font-medium" style={{ color: b.color }}>· {b.label}</span>
         </div>
+        <div className="text-muted-foreground mt-0.5">{near.length} {near.length === 1 ? "country" : "countries"} in this range</div>
         {near.length > 0 && (
-          <div className="pt-2 border-t border-border text-muted-foreground leading-relaxed">
+          <div className="mt-2 pt-2 border-t border-border text-muted-foreground leading-relaxed">
             <span className="text-foreground/70 font-medium">Countries here:</span> {near.map((c) => c.country).join(", ")}
           </div>
         )}
@@ -325,6 +318,49 @@ export default function Scores() {
   const emph = (code: string) => selectedIndex === code;
 
   // KDE distribution card (placed in the left column under the map).
+  // The KDE chart, reusable at any height (inline card + full-screen popout).
+  // Reference lines are drawn AFTER the curves so the hover marker sits on top
+  // of the densely-overlapping middle of the chart (otherwise it's hidden).
+  const kdeChartEl = (height: number | string) => (
+    <ResponsiveContainer width="100%" height={height}>
+      <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}
+        onMouseMove={(s) => setHoverScore(typeof s?.activeLabel === "number" ? s.activeLabel : null)}
+        onMouseLeave={() => setHoverScore(null)}>
+        <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+        <YAxis hide domain={[0, 112]} />
+        <RTooltip cursor={{ stroke: "#E24D88", strokeWidth: 1.5, strokeDasharray: "4 3" }} content={kdeTooltip} />
+        <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.18} dot={false} activeDot={emph("SHE Score") ? { r: 4, stroke: "#fff", strokeWidth: 1.5 } : false} isAnimationActive={false} />
+        {COMPANION_INDEXES.map((idx) => (
+          <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.18} dot={false} activeDot={emph(idx.code) ? { r: 4, stroke: "#fff", strokeWidth: 1.5 } : false} isAnimationActive={false} />
+        ))}
+        {selectedDisplay && (
+          <ReferenceLine x={selectedDisplay.she_score} stroke="#E0B84E" strokeDasharray="4 3"
+            label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
+        )}
+        {hoverScore != null && (
+          <ReferenceLine x={hoverScore} stroke="#E24D88" strokeWidth={2} strokeDasharray="3 3" />
+        )}
+      </LineChart>
+    </ResponsiveContainer>
+  );
+  const kdeLegend = (
+    <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 mt-1.5 text-[11px] text-muted-foreground">
+      {["SHE Score", ...COMPANION_INDEXES.map((i) => i.code)].map((code) => (
+        <span key={code} className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded-full" style={{ background: INDEX_COLORS[code] }} />{code}</span>
+      ))}
+    </div>
+  );
+  const kdeIndexChip = (
+    <div className="flex items-center gap-2 shrink-0">
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2 py-0.5" style={{ color: INDEX_COLORS[selectedIndex], borderColor: `${INDEX_COLORS[selectedIndex]}66` }}>
+        <span className="h-2 w-2 rounded-full" style={{ background: INDEX_COLORS[selectedIndex] }} /> {selectedIndex}
+      </span>
+      {selectedIndex !== "SHE Score" && (
+        <button onClick={() => setSelectedIndex("SHE Score")} className="text-xs text-muted-foreground hover:text-foreground">Reset</button>
+      )}
+    </div>
+  );
+
   const kdeCard = (
     <div className="rounded-lg border border-border bg-card p-3">
       <div className="flex items-center justify-between gap-3">
@@ -332,41 +368,12 @@ export default function Scores() {
           {selectedDisplay && <span className="font-normal text-muted-foreground"> · {selectedDisplay.iso_code} {selectedDisplay.she_score?.toFixed(1)}</span>}
         </h3>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2 py-0.5" style={{ color: INDEX_COLORS[selectedIndex], borderColor: `${INDEX_COLORS[selectedIndex]}66` }}>
-            <span className="h-2 w-2 rounded-full" style={{ background: INDEX_COLORS[selectedIndex] }} /> {selectedIndex}
-          </span>
-          {selectedIndex !== "SHE Score" && (
-            <button onClick={() => setSelectedIndex("SHE Score")} className="text-xs text-muted-foreground hover:text-foreground">Reset</button>
-          )}
+          {kdeIndexChip}
+          <button onClick={() => setKdePopout(true)} title="Expand chart" className="text-muted-foreground hover:text-foreground"><Maximize2 className="h-3.5 w-3.5" /></button>
         </div>
       </div>
-      <div className="mt-2">
-        <ResponsiveContainer width="100%" height={188}>
-          <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}
-            onMouseMove={(s) => setHoverScore(typeof s?.activeLabel === "number" ? s.activeLabel : null)}
-            onMouseLeave={() => setHoverScore(null)}>
-            <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-            <YAxis hide domain={[0, 112]} />
-            <RTooltip cursor={{ stroke: "#E0B84E", strokeWidth: 1.5, strokeDasharray: "4 3" }} content={kdeTooltip} />
-            {selectedDisplay && (
-              <ReferenceLine x={selectedDisplay.she_score} stroke="#E0B84E" strokeDasharray="4 3"
-                label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
-            )}
-            {hoverScore != null && (
-              <ReferenceLine x={hoverScore} stroke="#E24D88" strokeWidth={1.5} strokeDasharray="3 3" />
-            )}
-            <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.18} dot={false} isAnimationActive={false} />
-            {COMPANION_INDEXES.map((idx) => (
-              <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.18} dot={false} isAnimationActive={false} />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 mt-1.5 text-[11px] text-muted-foreground">
-        {["SHE Score", ...COMPANION_INDEXES.map((i) => i.code)].map((code) => (
-          <span key={code} className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded-full" style={{ background: INDEX_COLORS[code] }} />{code}</span>
-        ))}
-      </div>
+      <div className="mt-2">{kdeChartEl(188)}</div>
+      {kdeLegend}
     </div>
   );
 
@@ -479,12 +486,19 @@ export default function Scores() {
       <div className="container max-w-7xl py-3 space-y-2.5">
         {/* Header — single compact bar */}
         <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <div className="flex items-baseline gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="!text-xl md:!text-2xl !mb-0">
               Global SHE Score: <span className="tnum text-gold">{global != null ? global.toFixed(1) : "…"}</span>
               <span className="text-muted-foreground font-normal text-base"> / 100</span>
               {version === "v3" && <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-widest text-gold border border-gold/50 rounded px-1.5 py-0.5">V3 SHADOW</span>}
             </h1>
+            {global != null && (() => { const b = BANDS[bandKey(global)]; return (
+              <span className="text-sm font-bold px-2.5 py-1 rounded-full" style={{ color: b.color, background: `${b.color}22` }}>{b.label}</span>
+            ); })()}
+            <Link to="/explorer" title="Score calculator — see how the SHE Score changes when the pillar levers change"
+              className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-1 text-xs text-muted-foreground hover:border-magenta hover:text-magenta-ink transition-smooth">
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Test the levers
+            </Link>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/[0.06] px-2.5 py-0.5 text-xs text-gold">
               <Sparkles className="h-3 w-3" /> {summary?.countries_scored ?? totalC} countries · 2025
             </span>
@@ -582,7 +596,11 @@ export default function Scores() {
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
                   </div>
                 ) : null}
-                <div>
+                <div className="relative">
+                  <button onClick={() => setMapPopout(true)} title="Expand the map full-screen"
+                    className="absolute top-1 right-1 z-10 inline-flex items-center gap-1 rounded-md border border-border bg-card/90 backdrop-blur px-2 py-1 text-xs text-muted-foreground hover:border-magenta hover:text-magenta-ink transition-smooth shadow-card">
+                    <Maximize2 className="h-3.5 w-3.5" /> Expand
+                  </button>
                   <WorldMap countries={countries} mapHeight={250} onSelect={setSelected} selectedIso={selected?.iso_code}
                     legendSide="left"
                     mapHeader={<MetricsStrip stats={[
@@ -662,6 +680,29 @@ export default function Scores() {
           </div>
         </div>
       )}
+
+      {/* Full-screen KDE distribution popout */}
+      {kdePopout && (
+        <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm flex flex-col p-4 sm:p-6"
+          onClick={() => setKdePopout(false)}>
+          <div className="flex items-center justify-between mb-3 shrink-0 gap-3 flex-wrap">
+            <div>
+              <h2 className="text-lg !mb-0">Score distributions · {totalC} countries</h2>
+              <p className="text-xs text-muted-foreground">Each curve is one index. Click an index card to highlight it; hover the chart to read the SHE Score band at any point.</p>
+            </div>
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              {kdeIndexChip}
+              <button onClick={() => setKdePopout(false)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:border-magenta transition-smooth">
+                <X className="h-4 w-4" /> Close
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 min-h-0 rounded-xl border border-border bg-card p-4 flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex-1 min-h-0">{kdeChartEl("100%")}</div>
+            {kdeLegend}
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
@@ -673,7 +714,12 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, highPlu
     return (
       <div className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-24">
         <div className="text-xs text-muted-foreground">All scored countries · {count}</div>
-        <div className="font-serif text-lg font-bold">World</div>
+        <div className="flex items-center gap-2">
+          <div className="font-serif text-lg font-bold">World</div>
+          {global != null && (() => { const b = BANDS[bandKey(global)]; return (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: b.color, background: `${b.color}1f` }}>{b.label}</span>
+          ); })()}
+        </div>
         <div className="flex items-baseline gap-2 mt-1">
           <div className="font-serif text-2xl font-bold tnum text-gold">{global != null ? global.toFixed(1) : "—"}</div>
           <div className="text-xs text-muted-foreground">SHE Score / 100</div>
