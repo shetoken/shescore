@@ -406,14 +406,14 @@ export default function Scores() {
       <Link to="/safety" className="group rounded-lg border border-border bg-card p-3 hover:border-magenta transition-smooth flex flex-col">
         <ShieldAlert className="h-5 w-5 text-magenta-ink" />
         <div className="mt-1.5 font-serif text-base font-semibold leading-tight">Women's safety map</div>
-        <p className="mt-0.5 text-xs text-muted-foreground leading-snug">Travel-advisory view by the Safety pillar, country &amp; state-level.</p>
-        <span className="mt-2 inline-flex items-center gap-1 text-xs text-magenta-ink">Open the safety map <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
+        <p className="mt-0.5 text-xs text-muted-foreground leading-snug">Travel-advisory view — country &amp; state level.</p>
+        <span className="mt-auto pt-1.5 inline-flex items-center gap-1 text-xs text-magenta-ink">Open map <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
       </Link>
       <Link to="/clock" className="group rounded-lg border border-border bg-card p-3 hover:border-magenta transition-smooth flex flex-col">
         <Clock className="h-5 w-5 text-magenta-ink" />
         <div className="mt-1.5 font-serif text-base font-semibold leading-tight">A day in the life</div>
-        <p className="mt-0.5 text-xs text-muted-foreground leading-snug">What the numbers mean for 100 girls in a single day.</p>
-        <span className="mt-2 inline-flex items-center gap-1 text-xs text-magenta-ink">Open the figures <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
+        <p className="mt-0.5 text-xs text-muted-foreground leading-snug">The numbers for 100 girls in a single day.</p>
+        <span className="mt-auto pt-1.5 inline-flex items-center gap-1 text-xs text-magenta-ink">Open figures <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
       </Link>
     </>
   );
@@ -563,10 +563,10 @@ export default function Scores() {
                 <div className="grid sm:grid-cols-2 gap-3">{kdeCard}{donutCard}</div>
                 {referenceCard}
               </div>
-              {/* RIGHT: country panel + explore tiles */}
+              {/* RIGHT: country panel + explore tiles (one row) */}
               <div className="flex flex-col gap-3">
                 <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} tier1={tier1} tier4={tier4} totalPop={totalPop} />
-                {exploreTiles}
+                <div className="grid grid-cols-2 gap-3">{exploreTiles}</div>
               </div>
             </div>
           ) : (
