@@ -98,6 +98,9 @@ interface WorldMapProps {
   /** When set & non-empty, these ISO-A3 countries are brightened and the rest are dimmed
       (used to cross-highlight from the distribution chart on hover). */
   highlightIsos?: Set<string>;
+  /** Fired with the hovered country (or null on leave) — lets the page cross-highlight
+      the distribution chart and the tier donut from a map hover. */
+  onHover?: (c: CountryWEI | null) => void;
 }
 
 export function WorldMap({
@@ -111,6 +114,7 @@ export function WorldMap({
   colorFor,
   hideLegend,
   highlightIsos,
+  onHover,
 }: WorldMapProps) {
   const navigate = useNavigate();
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
@@ -153,6 +157,7 @@ export function WorldMap({
       const data = getDataForGeo(geo);
       if (!data) return;
       const iso3 = isoForGeo(geo);
+      onHover?.(data);
       setTooltip({
         country: data.country,
         iso:     data.iso_code,
@@ -163,14 +168,14 @@ export function WorldMap({
         y:       evt.clientY,
       });
     },
-    [getDataForGeo, getDisplayScore, subnationalIsos, isoForGeo]
+    [getDataForGeo, getDisplayScore, subnationalIsos, isoForGeo, onHover]
   );
 
   const handleMove = useCallback((evt: React.MouseEvent) => {
     setTooltip((t) => (t ? { ...t, x: evt.clientX, y: evt.clientY } : null));
   }, []);
 
-  const handleLeave = useCallback(() => setTooltip(null), []);
+  const handleLeave = useCallback(() => { setTooltip(null); onHover?.(null); }, [onHover]);
 
   const handleClick = useCallback(
     (geo: { id?: string | number }) => {

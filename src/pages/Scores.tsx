@@ -160,6 +160,7 @@ export default function Scores() {
   const [tierBy, setTierBy] = useState<"countries" | "women">("women");
   const [selectedIndex, setSelectedIndex] = useState<string>("SHE Score");
   const [hoverScore, setHoverScore] = useState<number | null>(null);
+  const [selectedTier, setSelectedTier] = useState<number | null>(null);
 
   const { data: summary } = useQuery({ queryKey: ["summary"], queryFn: api.summary, staleTime: 5 * 60 * 1000 });
   const { data, isLoading, isError } = useQuery({ queryKey: ["scores-countries"], queryFn: () => api.wei.countries(250), staleTime: 5 * 60 * 1000 });
@@ -217,17 +218,21 @@ export default function Scores() {
 
   // Cross-highlight: countries within ±2.5 of the hovered SHE Score → brighten on the map.
   const countriesNear = (score: number) => countries.filter((c) => Math.abs((c.she_score ?? 0) - score) <= 2.5);
-  const highlightIsos = useMemo(
-    () => (hoverScore == null ? undefined : new Set(countriesNear(hoverScore).map((c) => c.iso_code))),
+  // Countries to brighten on the map: hovered-score neighbours (transient), else the
+  // clicked donut tier (sticky).
+  const highlightIsos = useMemo(() => {
+    if (hoverScore != null) return new Set(countriesNear(hoverScore).map((c) => c.iso_code));
+    if (selectedTier != null) return new Set(countries.filter((c) => c.tier === selectedTier).map((c) => c.iso_code));
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hoverScore, countries],
-  );
-  // Tiers of the hovered countries → light up those donut slices.
-  const hoverTiers = useMemo(
-    () => (hoverScore == null ? null : new Set(countriesNear(hoverScore).map((c) => c.tier))),
+  }, [hoverScore, selectedTier, countries]);
+  // Donut slices to light up: tiers of hovered countries (transient), else the clicked tier.
+  const litTiers = useMemo(() => {
+    if (hoverScore != null) return new Set(countriesNear(hoverScore).map((c) => c.tier));
+    if (selectedTier != null) return new Set([selectedTier]);
+    return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hoverScore, countries],
-  );
+  }, [hoverScore, selectedTier, countries]);
   // When a companion index is selected, shade the map by its (placeholder) per-country score.
   const companionOverride = useMemo(() => {
     if (selectedIndex === "SHE Score") return undefined;
@@ -425,14 +430,21 @@ export default function Scores() {
                 {selectedIndex !== "SHE Score" && (
                   <div className="mb-2 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
                     Map shaded by <span className="font-medium" style={{ color: INDEX_COLORS[selectedIndex] }}>{selectedIndex}</span> — hover a country for its {selectedIndex} score.
-                    <span className="italic"> Illustrative placeholder until live per-country data.</span>
+                    <span className="italic"> Illustrative placeholder until live per-country data.</span>{" "}
+                    <button onClick={() => setSelectedIndex("SHE Score")} className="text-magenta-ink hover:underline">Reset to SHE Score</button>
                   </div>
                 )}
-                {highlightIsos && highlightIsos.size > 0 && (
-                  <div className="mb-2 text-xs text-magenta-ink">Highlighting {highlightIsos.size} countries near SHE Score {Math.round(hoverScore ?? 0)} (hover the distribution chart).</div>
-                )}
+                {hoverScore != null && highlightIsos && highlightIsos.size > 0 ? (
+                  <div className="mb-2 text-xs text-magenta-ink">Highlighting {highlightIsos.size} countries near SHE Score {Math.round(hoverScore)}.</div>
+                ) : selectedTier != null ? (
+                  <div className="mb-2 text-xs text-magenta-ink">
+                    Showing <span className="font-medium">{TIERS[selectedTier].label}</span> · {countries.filter((c) => c.tier === selectedTier).length} countries.{" "}
+                    <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
+                  </div>
+                ) : null}
                 <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code}
-                  highlightIsos={highlightIsos} scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
+                  highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
+                  scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
               </div>
               <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} />
             </div>
@@ -501,6 +513,9 @@ export default function Scores() {
                     <ReferenceLine x={selectedDisplay.she_score} stroke="#E0B84E" strokeDasharray="4 3"
                       label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
                   )}
+                  {hoverScore != null && (
+                    <ReferenceLine x={hoverScore} stroke="#E24D88" strokeWidth={1.5} strokeDasharray="3 3" />
+                  )}
                   <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.18} dot={false} isAnimationActive={false} />
                   {COMPANION_INDEXES.map((idx) => (
                     <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.18} dot={false} isAnimationActive={false} />
@@ -534,11 +549,12 @@ export default function Scores() {
                 <PieChart margin={{ top: 6, bottom: 6, left: 30, right: 30 }}>
                   <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
                     innerRadius={58} outerRadius={88} paddingAngle={2} stroke="none" isAnimationActive={false}
-                    label={sliceLabel} labelLine={leaderLine}>
+                    label={sliceLabel} labelLine={leaderLine} cursor="pointer"
+                    onClick={(_, i) => setSelectedTier((t) => (t === i + 1 ? null : i + 1))}>
                     {tierData.map((d, i) => {
                       const tier = i + 1;
-                      const lit = hoverTiers?.has(tier);
-                      return <Cell key={d.name} fill={d.color} fillOpacity={hoverTiers && !lit ? 0.22 : 1} stroke={lit ? "#ffffff" : "none"} strokeWidth={lit ? 2 : 0} />;
+                      const lit = litTiers?.has(tier);
+                      return <Cell key={d.name} fill={d.color} fillOpacity={litTiers && !lit ? 0.22 : 1} stroke={lit ? "#ffffff" : "none"} strokeWidth={lit ? 2 : 0} />;
                     })}
                   </Pie>
                   <RTooltip content={donutTooltip} />
