@@ -289,7 +289,7 @@ export function WorldMap({
 
       {/* Legend */}
       {!hideLegend && (
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 justify-center mt-2 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 justify-start mt-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span
             className="w-3 h-3 rounded-sm inline-block flex-shrink-0 border-2"
@@ -321,7 +321,7 @@ export function WorldMap({
         )}
       </div>
       )}
-      <p className="text-center text-[11px] text-muted-foreground/40 mt-1">
+      <p className="text-left text-[11px] text-muted-foreground/40 mt-1">
         Scroll to zoom · Drag to pan · Click a country to select
       </p>
     </div>
