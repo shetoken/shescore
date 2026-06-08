@@ -337,6 +337,12 @@ export default function Scores() {
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
 
       <div className="container max-w-7xl py-2 space-y-1.5">
+        {/* What the SHE Score is — intro above the headline */}
+        <p className="text-sm text-muted-foreground max-w-4xl">
+          <span className="font-semibold text-foreground">The SHE Score</span> — the published score (v2) is computed from five live pillars:
+          Empowerment (25%), Education &amp; Literacy (20%), Economic Inclusion (20%), Health &amp; Survival (15%) and Safety (Crime Penalty, −20%).
+          Four further pillars are in validation; published annually, quarterly for registered governments.
+        </p>
         {/* Header — single compact bar */}
         <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="flex items-baseline gap-3 flex-wrap">
@@ -435,7 +441,7 @@ export default function Scores() {
                   </div>
                 ) : null}
                 <div className="flex-1 min-h-0">
-                  <WorldMap countries={countries} mapHeight={330} onSelect={setSelected} selectedIso={selected?.iso_code}
+                  <WorldMap countries={countries} mapHeight={311} onSelect={setSelected} selectedIso={selected?.iso_code}
                     legendSide="left"
                     mapHeader={<MetricsStrip stats={[
                       { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
@@ -583,23 +589,21 @@ export default function Scores() {
           </div>
         </section>
 
-        {/* About the data */}
-        <section className="rounded-lg border border-border bg-card p-6 grid md:grid-cols-3 gap-6 text-sm">
-          <div>
-            <h3 className="font-semibold mb-2">The SHE Score</h3>
-            <p className="text-muted-foreground">The published score (v2) is computed from five LIVE pillars — Empowerment (25%), Education &amp; Literacy (20%), Economic Inclusion (20%), Health &amp; Survival (15%) and Safety (Crime Penalty, −20%). Four further pillars are in validation. Published annually, quarterly for registered governments.</p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Companion indexes</h3>
-            <ul className="text-muted-foreground space-y-1">
-              {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.title}</li>)}
-            </ul>
-            <p className="text-muted-foreground mt-2 text-xs">Reference only; in development; never inputs to the SHE Score.</p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Sources &amp; methodology</h3>
-            <p className="text-muted-foreground">Built from UN Women, World Bank, WHO, UNODC, UNESCO and ILO data. All scores normalised 0–100; higher is better for women. Scores are indicative and for research and awareness.</p>
-            <Link to="/methodology" className="text-magenta-ink hover:underline mt-1 inline-block">Read the methodology →</Link>
+        {/* Reference — Companion indexes + Sources, spanning the KDE + donut width */}
+        <section className="grid lg:grid-cols-[1.15fr_1fr_0.8fr] gap-3">
+          <div className="lg:col-span-2 rounded-lg border border-border bg-card p-4 grid sm:grid-cols-2 gap-6 text-sm">
+            <div>
+              <h3 className="font-semibold mb-2">Companion indexes</h3>
+              <ul className="text-muted-foreground space-y-1">
+                {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.title}</li>)}
+              </ul>
+              <p className="text-muted-foreground mt-2 text-xs">Reference only; in development; never inputs to the SHE Score.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">Sources &amp; methodology</h3>
+              <p className="text-muted-foreground">Built from UN Women, World Bank, WHO, UNODC, UNESCO and ILO data. All scores normalised 0–100; higher is better for women. Scores are indicative and for research and awareness.</p>
+              <Link to="/methodology" className="text-magenta-ink hover:underline mt-1 inline-block">Read the methodology →</Link>
+            </div>
           </div>
         </section>
       </div>
@@ -616,7 +620,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         <div className="text-xs text-muted-foreground">All scored countries · {count}</div>
         <div className="font-serif text-lg font-bold">World</div>
         <div className="flex items-baseline gap-2 mt-1">
-          <div className="font-serif text-3xl font-bold tnum text-gold">{global != null ? global.toFixed(1) : "—"}</div>
+          <div className="font-serif text-2xl font-bold tnum text-gold">{global != null ? global.toFixed(1) : "—"}</div>
           <div className="text-xs text-muted-foreground">SHE Score / 100</div>
         </div>
         {/* tier summary — mirrors the country panel's tier tag row so the two
@@ -631,8 +635,8 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
             const raw = globalPillars[p.field] ?? 0;
             return (
               <div key={p.key}>
-                <div className="flex justify-between text-xs mb-0.5"><span>{p.label}</span><span className="tnum">{raw}</span></div>
-                <div className="h-1.5 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
+                <div className="flex justify-between text-[11px] mb-0"><span>{p.label}</span><span className="tnum">{raw}</span></div>
+                <div className="h-1 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
               </div>
             );
           })}
@@ -657,7 +661,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
       </div>
       <div className="flex items-baseline gap-2 mt-1">
-        <div className="font-serif text-3xl font-bold tnum">{country.she_score?.toFixed(1)}</div>
+        <div className="font-serif text-2xl font-bold tnum">{country.she_score?.toFixed(1)}</div>
         <div className="text-xs text-muted-foreground">SHE Score / 100</div>
       </div>
 
@@ -671,13 +675,13 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         <span className="text-xs text-muted-foreground tnum">{fmtWomenM(country.population_millions)}M women <span className="text-foreground/55">({sharePctStr})</span></span>
       </div>
 
-      <div className="mt-2 space-y-1">
+      <div className="mt-2 space-y-0.5">
         {PILLARS.map((p) => {
           const raw = (country as unknown as Record<string, number>)[p.field] ?? 0;
           return (
             <div key={p.key}>
-              <div className="flex justify-between text-xs mb-0.5"><span>{p.label}</span><span className="tnum">{raw}</span></div>
-              <div className="h-1.5 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
+              <div className="flex justify-between text-[11px] mb-0"><span>{p.label}</span><span className="tnum">{raw}</span></div>
+              <div className="h-1 rounded-full bg-border overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, raw))}%`, background: p.hex }} /></div>
             </div>
           );
         })}
