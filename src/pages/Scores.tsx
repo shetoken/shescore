@@ -2,8 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip as RTooltip,
-  AreaChart, Area,
+  LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, ReferenceLine,
 } from "recharts";
 import { SEO } from "@/lib/seo";
 import { Layout } from "@/components/Layout";
@@ -63,6 +62,19 @@ const SHE_METHOD: Record<ApiVersion, { title: string; formula: Formula[]; note: 
     note: "v3 SHADOW reweights the five live pillars — heavier Economic Inclusion and Safety (Crime Penalty), lighter Empowerment and Education — so scores shift versus v2. It uses only existing pillar data; nothing is imputed. The four candidate pillars are still gathering data and contribute nothing yet. v3 does not affect the published score.",
   },
 };
+
+/* One colour per index for the distribution curves + legend. */
+const INDEX_COLORS: Record<string, string> = {
+  "SHE Score": "#E24D88", GPI: "#a855f7", SVI: "#ef4444", WADI: "#3b82f6",
+  WEVI: "#f97316", WHI: "#ec4899", WVI: "#06b6d4", Compliance: "#10b981",
+};
+
+/* Gaussian KDE for the real SHE Score distribution; analytic bell for the
+   companion indexes (centred on each published average — placeholder until live
+   per-country companion data is available). Each series is peak-normalised. */
+const gaussianKDE = (values: number[], h = 6) => (x: number) =>
+  values.reduce((s, v) => s + Math.exp(-0.5 * ((x - v) / h) ** 2), 0);
+const bellAt = (x: number, mean: number, sd: number) => Math.exp(-0.5 * ((x - mean) / sd) ** 2);
 
 function IndexCard({ code, desc, value, native, title, formula, note }: {
   code: string; desc: string; value: string; native?: boolean; title: string; formula: Formula[]; note: string;
@@ -126,13 +138,24 @@ export default function Scores() {
   const tierData = useMemo(() => [1, 2, 3, 4].map((t) => ({
     name: TIERS[t].label, count: countries.filter((c) => c.tier === t).length, color: TIERS[t].color,
   })), [countries]);
-  const histData = useMemo(() => {
-    const buckets = Array.from({ length: 10 }, (_, i) => ({ x: `${i * 10}`, count: 0 }));
-    countries.forEach((c) => { const b = Math.min(9, Math.floor((c.she_score ?? 0) / 10)); buckets[b].count++; });
-    return buckets;
+  // KDE-style distribution: real curve for SHE Score, analytic bells for companions.
+  const distData = useMemo(() => {
+    const XS = Array.from({ length: 51 }, (_, i) => i * 2);
+    const she = countries.map((c) => c.she_score).filter((v) => v > 0);
+    const kde = gaussianKDE(she, 6);
+    const sheRaw = XS.map(kde);
+    const sheMax = Math.max(...sheRaw, 1e-9);
+    return XS.map((x, i) => {
+      const row: Record<string, number | null> = { x };
+      row["SHE Score"] = she.length ? (sheRaw[i] / sheMax) * 100 : null;
+      COMPANION_INDEXES.forEach((idx) => { row[idx.code] = bellAt(x, idx.value, 18) * 100; });
+      return row;
+    });
   }, [countries]);
 
   const global = version === "v3" ? meanScore(countries) : (summary?.global_she_score ?? null);
+  const totalC = countries.length;
+  const maxTier = Math.max(1, ...tierData.map((t) => t.count));
 
   return (
     <Layout>
@@ -245,31 +268,74 @@ export default function Scores() {
         </section>
 
         {/* Charts */}
-        <section className="grid md:grid-cols-2 gap-5">
+        <section className="grid lg:grid-cols-2 gap-5">
+          {/* KDE distributions */}
           <div className="rounded-lg border border-border bg-card p-5">
-            <h3 className="text-base font-semibold">Distribution of scores</h3>
-            <p className="text-sm text-muted-foreground mb-3">How {countries.length} countries spread across the 0–100 scale.</p>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={histData}>
-                <XAxis dataKey="x" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} width={24} />
-                <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--foreground))" }} />
-                <Area type="monotone" dataKey="count" stroke="#E24D88" fill="#E24D8833" />
-              </AreaChart>
-            </ResponsiveContainer>
-            <p className="source-line">Bucketed by 10 points.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold">Score distributions — {totalC} countries</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Each curve is one of the {1 + COMPANION_INDEXES.length} indexes — separate scoring systems, not SHE Score sub-pillars.
+                  {selected && <> Dashed line = {selected.country} ({selected.she_score?.toFixed(1)}).</>}
+                </p>
+              </div>
+              <span className="text-xs text-muted-foreground shrink-0">peak = most countries</span>
+            </div>
+            <div className="mt-3">
+              <ResponsiveContainer width="100%" height={230}>
+                <LineChart data={distData} margin={{ left: -28, right: 10, top: 10, bottom: 0 }}>
+                  <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                  <YAxis hide domain={[0, 110]} />
+                  {selected && (
+                    <ReferenceLine x={selected.she_score} stroke="#E0B84E" strokeDasharray="4 3"
+                      label={{ value: selected.iso_code, fill: "#E0B84E", fontSize: 11, position: "top" }} />
+                  )}
+                  <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={2.5} dot={false} isAnimationActive={false} />
+                  {COMPANION_INDEXES.map((idx) => (
+                    <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={1.5} dot={false} isAnimationActive={false} opacity={0.85} />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+              {["SHE Score", ...COMPANION_INDEXES.map((i) => i.code)].map((code) => (
+                <span key={code} className="inline-flex items-center gap-1.5"><span className="h-0.5 w-3.5 rounded-full" style={{ background: INDEX_COLORS[code] }} />{code}</span>
+              ))}
+            </div>
+            <p className="source-line">SHE Score curve from live/baseline data; companion curves are illustrative placeholders until live data.</p>
           </div>
+
+          {/* Tier distribution bars */}
           <div className="rounded-lg border border-border bg-card p-5">
-            <h3 className="text-base font-semibold">Countries by tier</h3>
-            <p className="text-sm text-muted-foreground mb-3">Distribution across the four score tiers.</p>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={tierData} layout="vertical" margin={{ left: 8 }}>
-                <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} width={120} />
-                <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>{tierData.map((d) => <Cell key={d.name} fill={d.color} />)}</Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold">Country distribution by tier</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">How countries spread across the four score tiers.</p>
+              </div>
+              <span className="text-xs text-muted-foreground shrink-0">{totalC} countries</span>
+            </div>
+            <div className="mt-5 space-y-4">
+              {tierData.map((t) => {
+                const pct = totalC ? (t.count / totalC) * 100 : 0;
+                const w = (t.count / maxTier) * 100;
+                return (
+                  <div key={t.name}>
+                    <div className="flex items-baseline justify-between text-sm mb-1.5">
+                      <span className="font-medium">{t.name}</span>
+                      <span className="tnum"><span className="font-bold" style={{ color: t.color }}>{t.count}</span> <span className="text-muted-foreground">({pct.toFixed(1)}%)</span></span>
+                    </div>
+                    <div className="h-5 rounded-md bg-border/30 overflow-hidden">
+                      <div className="h-full rounded-md transition-all" style={{ width: `${w}%`, background: t.color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-3 mt-4 text-xs text-muted-foreground">
+              {tierData.map((t) => (
+                <span key={t.name} className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: t.color }} />{t.name.split(" · ")[1]}</span>
+              ))}
+            </div>
           </div>
         </section>
 
