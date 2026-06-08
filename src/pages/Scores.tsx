@@ -141,15 +141,16 @@ function IndexCard({ code, desc, value, native, color, badge, title, formula, no
   );
 }
 
-/* Headline metrics card — sits in the index-card row (2×2 mini-stats). */
-function StatsCard({ stats }: { stats: { label: string; value: string; color?: string }[] }) {
+/* Headline metrics — one-line strip above the map. */
+function MetricsStrip({ stats }: { stats: { label: string; value: string; color?: string }[] }) {
   return (
-    <div className="rounded-lg border border-border bg-card px-3 py-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 self-stretch content-center">
-      {stats.map((s) => (
-        <div key={s.label}>
-          <div className="text-[9px] uppercase tracking-wider text-muted-foreground leading-tight">{s.label}</div>
-          <div className="text-xs font-semibold tnum leading-tight" style={s.color ? { color: s.color } : undefined}>{s.value}</div>
-        </div>
+    <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-card px-4 py-2 text-sm">
+      {stats.map((s, i) => (
+        <span key={s.label} className="inline-flex items-baseline gap-1.5">
+          {i > 0 && <span className="text-muted-foreground/40 mr-1.5">·</span>}
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
+          <span className="font-semibold tnum" style={s.color ? { color: s.color } : undefined}>{s.value}</span>
+        </span>
       ))}
     </div>
   );
@@ -378,12 +379,6 @@ export default function Scores() {
               : "global averages · select a country to see its scores"} · click to filter · hover for methodology
           </p>
           <div className="flex flex-wrap gap-1.5">
-            <StatsCard stats={[
-              { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
-              { label: "Lowest", value: lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—", color: C_BAD },
-              { label: "Tier 1", value: `${tier1} countries`, color: C_GOOD },
-              { label: "Critical", value: `${tier4} countries`, color: C_BAD },
-            ]} />
             <IndexCard
               code="SHE Score" desc="Women's Empowerment" native badge="NATIVE" color={INDEX_COLORS["SHE Score"]}
               value={selectedDisplay ? (selectedDisplay.she_score?.toFixed(1) ?? "—") : (global != null ? global.toFixed(1) : "—")}
@@ -417,6 +412,14 @@ export default function Scores() {
             </div>
           </div>
 
+          {/* Headline metrics — one line above the map */}
+          <MetricsStrip stats={[
+            { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
+            { label: "Lowest", value: lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—", color: C_BAD },
+            { label: "Tier 1", value: `${tier1} countries`, color: C_GOOD },
+            { label: "Critical", value: `${tier4} countries`, color: C_BAD },
+          ]} />
+
           {isLoading ? (
             <div className="rounded-lg border border-border bg-card p-12 text-center text-muted-foreground">Loading scores…</div>
           ) : unavailable ? (
@@ -441,7 +444,7 @@ export default function Scores() {
                   </div>
                 ) : null}
                 <div className="flex-1 min-h-0">
-                  <WorldMap countries={countries} mapHeight={270} onSelect={setSelected} selectedIso={selected?.iso_code}
+                  <WorldMap countries={countries} mapHeight={240} onSelect={setSelected} selectedIso={selected?.iso_code}
                     legendSide="left"
                     legendTop={selectedDisplay ? (
                       <div className="pb-2.5 border-b border-border/50 max-w-[130px]">
@@ -642,12 +645,12 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         <div className="text-xs text-muted-foreground">All scored countries · {count}</div>
         <div className="font-serif text-lg font-bold">World</div>
         <div className="flex items-baseline gap-2 mt-1">
-          <div className="font-serif text-4xl font-bold tnum text-gold">{global != null ? global.toFixed(1) : "—"}</div>
+          <div className="font-serif text-3xl font-bold tnum text-gold">{global != null ? global.toFixed(1) : "—"}</div>
           <div className="text-xs text-muted-foreground">SHE Score / 100</div>
         </div>
         {/* tier summary — mirrors the country panel's tier tag row so the two
             panels (and therefore the map) stay the same height */}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: C_GOOD, background: `${C_GOOD}1f` }}>{tier1} Leading</span>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: C_BAD, background: `${C_BAD}1f` }}>{tier4} Critical</span>
         </div>
@@ -662,7 +665,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
             );
           })}
         </div>
-        <div className="mt-3 rounded-md border border-dashed border-border px-4 py-2 text-sm text-center text-muted-foreground">
+        <div className="mt-2 rounded-md border border-dashed border-border px-4 py-1.5 text-sm text-center text-muted-foreground">
           Click a country for its breakdown
         </div>
       </div>
@@ -678,7 +681,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
       </div>
       <div className="flex items-baseline gap-2 mt-1">
-        <div className="font-serif text-4xl font-bold tnum">{country.she_score?.toFixed(1)}</div>
+        <div className="font-serif text-3xl font-bold tnum">{country.she_score?.toFixed(1)}</div>
         <div className="text-xs text-muted-foreground">SHE Score / 100</div>
       </div>
 
@@ -692,7 +695,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         <span className="text-xs font-mono px-2 py-1 rounded-md border border-border text-muted-foreground">{country.iso_code}</span>
       </div>
 
-      <div className="mt-3 space-y-1.5">
+      <div className="mt-2 space-y-1">
         {PILLARS.map((p) => {
           const raw = (country as unknown as Record<string, number>)[p.field] ?? 0;
           return (
@@ -703,7 +706,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
           );
         })}
       </div>
-      <Link to={`/scores/${country.iso_code}`} className="mt-3 block text-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-smooth">
+      <Link to={`/scores/${country.iso_code}`} className="mt-2 block text-center rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-smooth">
         Full country profile →
       </Link>
     </div>
