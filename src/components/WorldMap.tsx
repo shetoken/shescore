@@ -332,15 +332,16 @@ export function WorldMap({
       )}
 
       {/* Map canvas (+ optional left-stacked legend in the same row) */}
-      <div className={legendSide === "left" ? "flex items-start gap-4" : ""}>
+      <div className={legendSide === "left" ? "flex items-stretch gap-4" : ""}>
         {legendSide === "left" && (
-          <div className="flex flex-col gap-2.5 shrink-0 self-start max-w-[130px]">
+          <div className="flex flex-col shrink-0 self-stretch max-w-[130px]">
             {legendTop}
-            <p className="text-[10px] text-muted-foreground/50 leading-snug">
+            {!hideLegend && renderLegend(true)}
+            <div className="border-t border-border/40 mt-3" />
+            {/* Hint pushed into the space under the legend, centered & larger */}
+            <p className="flex-1 flex items-center justify-center text-center text-xs text-muted-foreground/55 leading-snug">
               Scroll to zoom · Drag to pan · Click a country to select
             </p>
-            <div className="border-t border-border/40" />
-            {!hideLegend && renderLegend(true)}
           </div>
         )}
         {legendSide === "left" ? (

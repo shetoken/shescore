@@ -440,7 +440,7 @@ export default function Scores() {
   // "The SHE Score" explainer tile — fills the right column under the explore
   // tiles (was an intro line above the headline).
   const sheScoreTile = (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-lg border border-border bg-card p-4 flex-1 flex flex-col justify-center">
       <h3 className="!text-base font-semibold !mb-1.5">The SHE Score</h3>
       <p className="text-xs text-muted-foreground leading-snug">
         The published score (v2) is computed from five live pillars — Empowerment (25%), Education &amp; Literacy (20%),
@@ -537,7 +537,7 @@ export default function Scores() {
               <p className="mt-1 text-sm text-muted-foreground">The methodology and baseline data remain on the <Link to="/data" className="text-magenta-ink hover:underline">data page</Link>.</p>
             </div>
           ) : view === "map" ? (
-            <div className="grid lg:grid-cols-[1fr_320px] gap-4 items-start">
+            <div className="grid lg:grid-cols-[1fr_320px] gap-4 items-stretch">
               {/* LEFT: map + KDE/donut charts stacked under it */}
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col">
