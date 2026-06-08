@@ -21,7 +21,6 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = resolve(ROOT, "dist");
 const BASE = "https://www.shescore.org";
 const PUBLISHER = "The SHE Score Foundation";
-const TOKEN_LINE = "An independent token project also tracks the SHE Score → shetoken.org";
 
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -52,7 +51,6 @@ function footerHtml() {
     `<p><strong>SHE Score</strong> — the index. <strong>${esc(PUBLISHER)}</strong> — the publisher.</p>` +
     `<p>The SHE Score is an independent project and is not affiliated with, endorsed by, or derived from the UNDP/UN Women Women's Empowerment Index, the SHE Index powered by EY, or any other index referenced on this site.</p>` +
     `<p>The SHE Score methodology is published and open source. Annual scores publish on the documented cycle.</p>` +
-    `<p>${esc(TOKEN_LINE)}</p>` +
     `<p>© ${new Date().getFullYear()} ${esc(PUBLISHER)}.</p>` +
     `</footer>`
   );

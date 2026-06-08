@@ -3,8 +3,9 @@
  * contains token / crypto / solicitation language. Scans visible HTML output
  * (dist/**\/*.html), the content crawlers and firewall categorizers actually see.
  *
- * Single permitted exception: one footer line referencing the token project.
- * That exact sentence is stripped before scanning.
+ * Strict: there is no permitted exception — the served site contains zero
+ * token/crypto references (the data API host is env-driven and off any
+ * token-branded domain).
  *
  * Acronyms (DEX, DAO, Web3) are matched case-sensitively as whole words so the
  * legitimate words "index"/"indices" never trip the gate.
@@ -15,8 +16,6 @@ import { dirname, resolve, join } from "node:path";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = resolve(ROOT, "dist");
-
-const PERMITTED_LINE = "An independent token project also tracks the SHE Score → shetoken.org";
 
 const BANNED = [
   { re: /\$SHE/g, label: "$SHE" },
@@ -59,9 +58,7 @@ function main() {
 
   const violations = [];
   for (const f of files) {
-    let html = readFileSync(f, "utf8");
-    // Allow the single permitted footer reference exactly once per file.
-    html = html.split(PERMITTED_LINE).join(" ");
+    const html = readFileSync(f, "utf8");
     for (const { re, label } of BANNED) {
       const m = html.match(re);
       if (m) violations.push({ file: f.replace(DIST, "dist"), label, sample: m.slice(0, 3).join(", "), count: m.length });
@@ -74,7 +71,7 @@ function main() {
     console.error("\nFix the content or add an approved exception. The shescore target must read as an institutional research site.\n");
     process.exit(1);
   }
-  console.log(`[firewall] OK — scanned ${files.length} html files, no banned terms (1 permitted footer exception).`);
+  console.log(`[firewall] OK — scanned ${files.length} html files, zero banned terms (strict, no exceptions).`);
 }
 
 main();

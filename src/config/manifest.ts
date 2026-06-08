@@ -24,7 +24,6 @@ export const SITE = {
   publisher: "The SHE Score Foundation",
   origin: "https://www.shescore.org",
   repo: "https://github.com/theshescorefoundation/shescore",
-  tokenLine: "An independent token project also tracks the SHE Score → shetoken.org",
 };
 
 export const PAGES: PageMeta[] = [

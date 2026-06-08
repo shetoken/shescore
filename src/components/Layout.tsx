@@ -83,7 +83,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
               UNDP/UN Women Women's Empowerment Index, the SHE Index powered by EY, or any other index referenced on this site.
             </p>
             <p>The SHE Score methodology is published and open source. Annual scores publish on the documented cycle.</p>
-            <p className="text-muted-foreground/70">{SITE.tokenLine}</p>
             <p>© {new Date().getFullYear()} {SITE.publisher}.</p>
           </div>
         </div>

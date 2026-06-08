@@ -67,7 +67,7 @@ export function SEO({
             "distribution": [{
               "@type": "DataDownload",
               "encodingFormat": "application/json",
-              "contentUrl": "https://api.shetoken.org/v1/wei/countries",
+              "contentUrl": "https://api.shescore.org/v1/wei/countries",
             }],
           },
         ],
@@ -100,7 +100,7 @@ export function CountrySEO({ country, iso, score, region }: {
               "distribution": [{
                 "@type": "DataDownload",
                 "encodingFormat": "application/json",
-                "contentUrl": `https://api.shetoken.org/v1/wei/countries/${iso}`,
+                "contentUrl": `https://api.shescore.org/v1/wei/countries/${iso}`,
               }],
             },
             {

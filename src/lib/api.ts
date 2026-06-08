@@ -1,4 +1,9 @@
-const API_BASE = 'https://api.shetoken.org';
+// Data API host. Defaults to the neutral institutional host; override per-deploy
+// with VITE_API_BASE. When the host is unreachable, callers fall back to the
+// committed same-origin baseline dataset (public/data/fallback-countries.json),
+// so the site renders real numbers regardless. Kept off any token-branded host
+// so the served bundle stays clean for content-inspecting firewalls.
+const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) || 'https://api.shescore.org';
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, init);
