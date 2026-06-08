@@ -603,9 +603,10 @@ export default function Scores() {
         </section>
 
 
-        {/* Reference — Companion indexes + Sources & methodology */}
-        <section className="rounded-lg border border-border bg-card p-4 grid sm:grid-cols-2 gap-6 text-sm">
-          <div>
+        {/* Reference — spans the KDE + donut (left column) width */}
+        <section className="grid lg:grid-cols-[1fr_320px] gap-4">
+          <div className="rounded-lg border border-border bg-card p-4 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+            <div>
               <h3 className="font-semibold mb-2">Companion indexes</h3>
               <ul className="text-muted-foreground space-y-1">
                 {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.title}</li>)}
@@ -617,6 +618,7 @@ export default function Scores() {
               <p className="text-muted-foreground">Built from UN Women, World Bank, WHO, UNODC, UNESCO and ILO data. All scores normalised 0–100; higher is better for women. Scores are indicative and for research and awareness.</p>
               <Link to="/methodology" className="text-magenta-ink hover:underline mt-1 inline-block">Read the methodology →</Link>
             </div>
+          </div>
         </section>
       </div>
     </Layout>
