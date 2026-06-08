@@ -95,6 +95,9 @@ interface WorldMapProps {
   colorFor?: (score: number | null | undefined) => string;
   /** Hide the built-in SHE Score-tier legend (e.g. when the page shows its own legend). */
   hideLegend?: boolean;
+  /** When set & non-empty, these ISO-A3 countries are brightened and the rest are dimmed
+      (used to cross-highlight from the distribution chart on hover). */
+  highlightIsos?: Set<string>;
 }
 
 export function WorldMap({
@@ -107,6 +110,7 @@ export function WorldMap({
   subnationalIsos,
   colorFor,
   hideLegend,
+  highlightIsos,
 }: WorldMapProps) {
   const navigate = useNavigate();
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
@@ -240,14 +244,17 @@ export function WorldMap({
                   const fill        = colorFor ? colorFor(displayScore) : scoreToColor(displayScore);
                   const hasData     = !!data;   // clickable if SHE Score record exists
                   const hasSub      = !!data && !!subnationalIsos?.has(data.iso_code);
+                  const isHi        = !!highlightIsos && !!data && highlightIsos.has(data.iso_code);
+                  const dim         = !!highlightIsos && highlightIsos.size > 0 && !isHi;
 
                   return (
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
                       fill={fill}
-                      stroke={isSelected ? "#ffffff" : hasSub ? "#fcd34d" : "#0f172a"}
-                      strokeWidth={isSelected ? 2 : hasSub ? 1 : 0.4}
+                      fillOpacity={dim ? 0.2 : 1}
+                      stroke={isHi ? "#ffffff" : isSelected ? "#ffffff" : hasSub ? "#fcd34d" : "#0f172a"}
+                      strokeWidth={isHi ? 1.5 : isSelected ? 2 : hasSub ? 1 : 0.4}
                       strokeDasharray={hasSub && !isSelected ? "2 1.5" : undefined}
                       style={{
                         default: {

@@ -146,6 +146,7 @@ export default function Scores() {
   const [version, setVersion] = useState<ApiVersion>("v2");
   const [tierBy, setTierBy] = useState<"countries" | "women">("women");
   const [selectedIndex, setSelectedIndex] = useState<string>("SHE Score");
+  const [hoverScore, setHoverScore] = useState<number | null>(null);
 
   const { data: summary } = useQuery({ queryKey: ["summary"], queryFn: api.summary, staleTime: 5 * 60 * 1000 });
   const { data, isLoading, isError } = useQuery({ queryKey: ["scores-countries"], queryFn: () => api.wei.countries(105), staleTime: 5 * 60 * 1000 });
@@ -201,6 +202,14 @@ export default function Scores() {
   // Re-resolve the selected country against the versioned list (score is version-aware).
   const selectedDisplay = selected ? (countries.find((c) => c.iso_code === selected.iso_code) ?? selected) : null;
 
+  // Cross-highlight: countries within ±2.5 of the hovered SHE Score → brighten on the map.
+  const countriesNear = (score: number) => countries.filter((c) => Math.abs((c.she_score ?? 0) - score) <= 2.5);
+  const highlightIsos = useMemo(
+    () => (hoverScore == null ? undefined : new Set(countriesNear(hoverScore).map((c) => c.iso_code))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hoverScore, countries],
+  );
+
   // Donut data labels (percentage on each slice) + leader lines.
   const RADIAN = Math.PI / 180;
   // Multi-line on-slice label: tier name + % + count/women (replaces the legend).
@@ -232,31 +241,51 @@ export default function Scores() {
     return <path d={`M${x1},${y1}L${x2},${y2}`} stroke={tierData[index]?.color} strokeOpacity={0.5} fill="none" />;
   };
 
-  // KDE hover: list the indexes (most countries first) + the countries near the hovered score.
+  // KDE hover: per-index reading (relative density bar) + the full list of countries at the score.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const kdeTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
-    const near = countries.filter((c) => Math.abs((c.she_score ?? 0) - label) <= 2.5).map((c) => c.country);
+    const near = countriesNear(label);
     const items = [...payload].filter((p) => p.value != null).sort((a, b) => b.value - a.value);
+    const maxV = Math.max(...items.map((i) => i.value), 1);
     return (
-      <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card max-w-[230px]">
-        <div className="font-semibold mb-1.5">SHE Score ≈ {Math.round(label)}</div>
-        <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+      <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card w-[260px]">
+        <div className="font-semibold mb-2">SHE Score ≈ {Math.round(label)} <span className="text-muted-foreground font-normal">· {near.length} countries</span></div>
+        <div className="space-y-1 mb-2">
           {items.map((p) => (
-            <span key={p.name} className="inline-flex items-center gap-1" style={{ color: p.color, opacity: p.name === selectedIndex ? 1 : 0.75 }}>
-              <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />{p.name}
-            </span>
+            <div key={p.name} className="flex items-center gap-2">
+              <span className="w-[88px] truncate shrink-0" style={{ color: p.color, opacity: p.name === selectedIndex ? 1 : 0.85, fontWeight: p.name === selectedIndex ? 700 : 400 }}>{p.name}</span>
+              <div className="flex-1 h-1.5 rounded-full bg-border/60 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${(p.value / maxV) * 100}%`, background: p.color }} /></div>
+            </div>
           ))}
         </div>
         {near.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-border text-muted-foreground">
-            <span className="text-foreground/70">Countries here:</span> {near.slice(0, 6).join(", ")}{near.length > 6 ? ` +${near.length - 6} more` : ""}
+          <div className="pt-2 border-t border-border text-muted-foreground leading-relaxed">
+            <span className="text-foreground/70 font-medium">Countries here:</span> {near.map((c) => c.country).join(", ")}
           </div>
         )}
       </div>
     );
   };
   const emph = (code: string) => selectedIndex === code;
+
+  // Themed donut tooltip.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const donutTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const t = payload[0].payload;
+    const pctC = totalC ? (t.count / totalC) * 100 : 0;
+    const pctW = totalPop ? (t.pop / totalPop) * 100 : 0;
+    return (
+      <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card">
+        <div className="font-semibold flex items-center gap-2 mb-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: t.color }} />{t.name}</div>
+        <div className="space-y-0.5">
+          <div className="flex justify-between gap-4"><span className="text-muted-foreground">Countries</span><span className="tnum font-medium">{t.count} ({pctC.toFixed(1)}%)</span></div>
+          <div className="flex justify-between gap-4"><span className="text-muted-foreground">Women</span><span className="tnum font-medium">{womenM(t.pop).toLocaleString()}M ({pctW.toFixed(1)}%)</span></div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Layout>
@@ -368,7 +397,10 @@ export default function Scores() {
                     <span className="font-medium" style={{ color: INDEX_COLORS[selectedIndex] }}> {selectedIndex}</span> data appears with the live API — the distribution above is filtered to it.
                   </div>
                 )}
-                <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code} />
+                {highlightIsos && highlightIsos.size > 0 && (
+                  <div className="mb-2 text-xs text-magenta-ink">Highlighting {highlightIsos.size} countries near SHE Score {Math.round(hoverScore ?? 0)} (hover the distribution chart).</div>
+                )}
+                <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code} highlightIsos={highlightIsos} />
               </div>
               <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} />
             </div>
@@ -427,7 +459,9 @@ export default function Scores() {
             </div>
             <div className="mt-3">
               <ResponsiveContainer width="100%" height={230}>
-                <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}>
+                <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}
+                  onMouseMove={(s) => setHoverScore(typeof s?.activeLabel === "number" ? s.activeLabel : null)}
+                  onMouseLeave={() => setHoverScore(null)}>
                   <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis hide domain={[0, 112]} />
                   <RTooltip cursor={{ stroke: "#E0B84E", strokeWidth: 1.5, strokeDasharray: "4 3" }} content={kdeTooltip} />
@@ -471,15 +505,12 @@ export default function Scores() {
                     label={sliceLabel} labelLine={leaderLine}>
                     {tierData.map((d) => <Cell key={d.name} fill={d.color} />)}
                   </Pie>
-                  <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-                    formatter={(v: number, n: string) => tierBy === "women"
-                      ? [`${womenM(v).toLocaleString()}M women (${totalPop ? ((v / totalPop) * 100).toFixed(1) : 0}%)`, n]
-                      : [`${v} countries (${totalC ? ((v / totalC) * 100).toFixed(1) : 0}%)`, n]} />
+                  <RTooltip content={donutTooltip} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
                 {tierBy === "women" ? (
-                  <><div className="font-serif text-2xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">women tracked</div></>
+                  <><div className="font-serif text-2xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">women's population</div></>
                 ) : (
                   <><div className="font-serif text-3xl font-bold tnum leading-none">{totalC}</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">countries</div></>
                 )}
