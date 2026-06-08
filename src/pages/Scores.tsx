@@ -437,17 +437,24 @@ export default function Scores() {
     </div>
   );
 
+  // "The SHE Score" explainer tile — fills the right column under the explore
+  // tiles (was an intro line above the headline).
+  const sheScoreTile = (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <h3 className="!text-base font-semibold !mb-1.5">The SHE Score</h3>
+      <p className="text-xs text-muted-foreground leading-snug">
+        The published score (v2) is computed from five live pillars — Empowerment (25%), Education &amp; Literacy (20%),
+        Economic Inclusion (20%), Health &amp; Survival (15%) and Safety (Crime Penalty, −20%). Four further pillars are
+        in validation; published annually, quarterly for registered governments.
+      </p>
+    </div>
+  );
+
   return (
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
 
       <div className="container max-w-7xl py-2 space-y-1.5">
-        {/* What the SHE Score is — intro above the headline */}
-        <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">The SHE Score</span> — the published score (v2) is computed from five live pillars:
-          Empowerment (25%), Education &amp; Literacy (20%), Economic Inclusion (20%), Health &amp; Survival (15%) and Safety (Crime Penalty, −20%).
-          Four further pillars are in validation; published annually, quarterly for registered governments.
-        </p>
         {/* Header — single compact bar */}
         <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="flex items-baseline gap-3 flex-wrap">
@@ -567,6 +574,7 @@ export default function Scores() {
               <div className="flex flex-col gap-3">
                 <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} tier1={tier1} tier4={tier4} totalPop={totalPop} />
                 <div className="grid grid-cols-2 gap-3">{exploreTiles}</div>
+                {sheScoreTile}
               </div>
             </div>
           ) : (
@@ -600,7 +608,7 @@ export default function Scores() {
             </div>
             <div className="mt-3 grid sm:grid-cols-2 gap-3">{kdeCard}{donutCard}</div>
             <div className="mt-3 grid sm:grid-cols-2 gap-3">{exploreTiles}</div>
-            <div className="mt-3">{referenceCard}</div>
+            <div className="mt-3 grid sm:grid-cols-2 gap-3">{referenceCard}{sheScoreTile}</div>
             </>
           )}
         </section>
