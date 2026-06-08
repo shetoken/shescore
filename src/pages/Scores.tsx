@@ -12,7 +12,11 @@ import { applyVersionList, meanScore } from "@/lib/scoring";
 import { type ApiVersion } from "@/config/apiVersion";
 import { PILLARS } from "@/theme/pillars";
 import { WorldMap } from "@/components/WorldMap";
-import { Search, ArrowUpDown, Map as MapIcon, Table as TableIcon, ShieldAlert, Clock, ArrowRight, X } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Search, ArrowUpDown, Map as MapIcon, Table as TableIcon, ShieldAlert, Clock, ArrowRight, X, AlertTriangle, Sparkles } from "lucide-react";
+
+const C_GOOD = "#5BC289"; // green — high score / leading
+const C_BAD = "#E0606A";  // red — low score / critical
 
 const TIERS: Record<number, { label: string; color: string }> = {
   1: { label: "Tier 1 · Leading", color: "#5BC289" },
@@ -76,39 +80,46 @@ const gaussianKDE = (values: number[], h = 6) => (x: number) =>
   values.reduce((s, v) => s + Math.exp(-0.5 * ((x - v) / h) ** 2), 0);
 const bellAt = (x: number, mean: number, sd: number) => Math.exp(-0.5 * ((x - mean) / sd) ** 2);
 
-function IndexCard({ code, desc, value, native, title, formula, note }: {
-  code: string; desc: string; value: string; native?: boolean; title: string; formula: Formula[]; note: string;
+function IndexCard({ code, desc, value, native, color, badge, title, formula, note }: {
+  code: string; desc: string; value: string; native?: boolean; color: string; badge?: string; title: string; formula: Formula[]; note: string;
 }) {
+  // Native (SHE Score) reads in gold; companions in their own index colour.
+  const accent = native ? "#E0B84E" : color;
   return (
-    <div className="relative group">
-      <div className={`rounded-lg px-4 py-2.5 cursor-default ${native ? "border-2 border-magenta/50 bg-magenta/10" : "border border-border bg-card"}`}>
-        <div className={`text-xs font-bold ${native ? "text-magenta-ink" : ""}`}>{code}</div>
-        <div className={`font-serif text-xl font-bold tnum ${native ? "" : "text-foreground/90"}`}>{value}</div>
-        <div className="text-[10px] text-muted-foreground max-w-[130px] leading-tight">{desc}</div>
-      </div>
-      {/* hover methodology tooltip — exact index methodology */}
-      <div className="pointer-events-none absolute z-30 hidden group-hover:block bottom-full mb-2 left-0 w-64 rounded-lg border border-border bg-popover p-3 shadow-card text-xs">
-        <p className={`font-bold mb-1.5 ${native ? "text-magenta-ink" : ""}`}>{title}</p>
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>
+        <div className="rounded-lg px-4 py-2.5 cursor-default border-2"
+          style={{ borderColor: native ? accent : `${color}55`, background: `${accent}14` }}>
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="text-xs font-bold" style={{ color: accent }}>{code}</div>
+            {badge && <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground border border-border rounded px-1 py-px">{badge}</span>}
+          </div>
+          <div className="font-serif text-xl font-bold tnum" style={{ color: accent }}>{value}</div>
+          <div className="text-[10px] text-muted-foreground max-w-[130px] leading-tight">{desc}</div>
+        </div>
+      </TooltipTrigger>
+      {/* Radix tooltip auto-flips/clamps to stay in the viewport (no clipping). */}
+      <TooltipContent side="bottom" align="start" collisionPadding={12} className="w-64 max-w-[88vw] p-3 text-xs">
+        <p className="font-bold mb-1.5" style={{ color: accent }}>{title}</p>
         <ul className="space-y-0.5">
           {formula.map((f) => (
             <li key={f.label} className="flex justify-between gap-3">
-              <span className="text-foreground/80">{f.label}</span>
-              {f.weight && <span className="font-mono text-muted-foreground shrink-0">{f.weight}</span>}
+              <span className="text-foreground/85">{f.label}</span>
+              {f.weight && <span className="font-mono font-semibold shrink-0" style={{ color: accent }}>{f.weight}</span>}
             </li>
           ))}
         </ul>
         <p className="text-muted-foreground mt-2 pt-2 border-t border-border">{note}</p>
-      </div>
-    </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
-function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3">
+    <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 min-w-[120px]">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="font-serif text-lg font-bold tnum">{value}</div>
-      {sub && <div className="text-xs text-muted-foreground">{sub}</div>}
+      <div className="text-sm font-semibold tnum leading-tight mt-0.5" style={color ? { color } : undefined}>{value}</div>
     </div>
   );
 }
@@ -156,51 +167,82 @@ export default function Scores() {
   const global = version === "v3" ? meanScore(countries) : (summary?.global_she_score ?? null);
   const totalC = countries.length;
   const maxTier = Math.max(1, ...tierData.map((t) => t.count));
+  // Version-aware highest/lowest + tier counts for the summary cards.
+  const ranked = [...countries].sort((a, b) => b.she_score - a.she_score);
+  const highC = ranked[0], lowC = ranked[ranked.length - 1];
+  const tier1 = countries.filter((c) => c.tier === 1).length;
+  const tier4 = countries.filter((c) => c.tier === 4).length;
 
   return (
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
 
       <div className="container max-w-6xl py-8 space-y-8">
+        {/* v3 shadow banner */}
+        {version === "v3" && (
+          <div className="rounded-xl border-2 border-dashed border-gold/50 bg-gold/[0.06] p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-gold shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <div className="font-semibold text-gold">SHADOW — v3 in validation · does not affect the published score</div>
+              <p className="text-muted-foreground mt-0.5">
+                You're previewing the v3 methodology. It <strong className="text-foreground">reweights the five live pillars</strong> —
+                heavier Economic Inclusion and Safety (Crime Penalty), lighter Empowerment and Education — so the scores shift
+                versus v2, using only existing pillar data. Four further candidate pillars (Bodily Autonomy, Dignity &amp; Welfare,
+                Digital &amp; Social, expanded Safety &amp; Justice) are still gathering data and contribute nothing yet. See the
+                full breakdown in <Link to="/lab" className="text-gold hover:underline">The Lab</Link>.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <header>
-          <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-            <span className="text-xs font-semibold uppercase tracking-widest text-magenta-ink">The scores</span>
+          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/[0.06] px-3 py-1 text-xs text-gold">
+              <Sparkles className="h-3 w-3" /> SHE Score data · {summary?.countries_scored ?? totalC} countries scored
+            </span>
             <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
               Methodology version
               <select value={version} onChange={(e) => setVersion(e.target.value as ApiVersion)}
-                className={`h-8 rounded-md border bg-card px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring ${version === "v3" ? "border-magenta/60 text-magenta-ink" : "border-border"}`}>
+                className={`h-8 rounded-md border bg-card px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring ${version === "v3" ? "border-gold/60 text-gold" : "border-border"}`}>
                 <option value="v2">v2 — Official</option>
                 <option value="v3">v3 — Shadow preview</option>
               </select>
             </label>
           </div>
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h1 className="!text-3xl md:!text-4xl">
-              Global SHE Score: <span className={`tnum ${version === "v3" ? "text-magenta-ink" : "text-magenta-ink"}`}>{global != null ? global.toFixed(1) : "…"}</span>
-              <span className="text-muted-foreground font-normal text-xl"> / 100</span>
-              {version === "v3" && <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-widest text-magenta-ink border border-magenta/50 rounded px-1.5 py-0.5">v3 shadow</span>}
-            </h1>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <StatCard label="Highest" value={summary?.highest_country ?? "—"} sub={summary ? `${summary.highest_score?.toFixed?.(1) ?? summary.highest_score}` : ""} />
-              <StatCard label="Lowest" value={summary?.lowest_country ?? "—"} sub={summary ? `${summary.lowest_score?.toFixed?.(1) ?? summary.lowest_score}` : ""} />
-              <StatCard label="Tier 1" value={`${summary?.tier_1_count ?? "—"}`} sub="leading" />
-              <StatCard label="Critical" value={`${summary?.tier_4_count ?? "—"}`} sub="tier 4" />
+            <div>
+              <h1 className="!text-3xl md:!text-4xl">
+                Global SHE Score: <span className="tnum text-gold">{global != null ? global.toFixed(1) : "…"}</span>
+                <span className="text-muted-foreground font-normal text-xl"> / 100</span>
+                {version === "v3" && <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-widest text-gold border border-gold/50 rounded px-1.5 py-0.5">V3 SHADOW</span>}
+              </h1>
+              <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
+                SHE Score · v2 baseline
+                <span className="inline-flex items-center gap-1 rounded-full bg-pillar-economic/15 text-pillar-economic px-2 py-0.5 text-xs">● 2025 dataset</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <StatCard label="Highest" value={highC ? `${highC.country} · ${highC.she_score.toFixed(1)}` : "—"} color={C_GOOD} />
+              <StatCard label="Lowest" value={lowC ? `${lowC.country} · ${lowC.she_score.toFixed(1)}` : "—"} color={C_BAD} />
+              <StatCard label="Tier 1" value={`${tier1} countries`} color={C_GOOD} />
+              <StatCard label="Critical" value={`${tier4} countries`} color={C_BAD} />
             </div>
           </div>
         </header>
 
         {/* Companion indexes (display-only) */}
         <section>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">SHE Score + companion indexes · hover for methodology · comparison only, never inputs</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">8 indexes · hover for methodology · comparison only, never inputs to the SHE Score</p>
           <div className="flex flex-wrap gap-2">
             <IndexCard
-              code="SHE Score" desc="Women's Empowerment" native
+              code="SHE Score" desc="Women's Empowerment" native badge="NATIVE" color={INDEX_COLORS["SHE Score"]}
               value={global != null ? global.toFixed(1) : "—"}
               title={SHE_METHOD[version].title} formula={SHE_METHOD[version].formula} note={SHE_METHOD[version].note}
             />
             {COMPANION_INDEXES.map((idx) => (
               <IndexCard key={idx.code} code={idx.code} desc={idx.desc} value={idx.value.toFixed(1)}
+                color={INDEX_COLORS[idx.code]} badge={idx.code === "Compliance" ? "DERIVED" : undefined}
                 title={idx.title} formula={idx.formula} note={idx.note} />
             ))}
           </div>
@@ -283,12 +325,12 @@ export default function Scores() {
             </div>
             <div className="mt-3">
               <ResponsiveContainer width="100%" height={230}>
-                <LineChart data={distData} margin={{ left: -28, right: 10, top: 10, bottom: 0 }}>
+                <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}>
                   <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <YAxis hide domain={[0, 110]} />
+                  <YAxis hide domain={[0, 112]} />
                   {selected && (
                     <ReferenceLine x={selected.she_score} stroke="#E0B84E" strokeDasharray="4 3"
-                      label={{ value: selected.iso_code, fill: "#E0B84E", fontSize: 11, position: "top" }} />
+                      label={{ value: selected.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
                   )}
                   <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={2.5} dot={false} isAnimationActive={false} />
                   {COMPANION_INDEXES.map((idx) => (

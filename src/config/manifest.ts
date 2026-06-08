@@ -49,7 +49,7 @@ export const PAGES: PageMeta[] = [
     priority: "0.9", changefreq: "monthly",
   },
   {
-    path: "/lab", key: "Lab", nav: true, navLabel: "The Lab",
+    path: "/lab", key: "Lab", nav: false, navLabel: "The Lab",
     title: "The Methodology Lab — v3 Shadow Scores in Validation | SHE Score",
     description:
       "Where the next version of the SHE Score is validated in public. v3 candidate pillars are shadow-scored openly until they meet the published data standard. Shadow scores do not yet affect published scores.",

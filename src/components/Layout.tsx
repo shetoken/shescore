@@ -1,6 +1,47 @@
-import { Link, NavLink } from "react-router-dom";
-import { NAV_PAGES, SITE } from "@/config/manifest";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { NAV_PAGES, SITE, pageByKey } from "@/config/manifest";
 import { Wordmark } from "@/components/design/Wordmark";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
+
+/* Methodology ▾ — groups Methodology + The Lab (sub-menu). */
+function MethodologyMenu() {
+  const { pathname } = useLocation();
+  const lab = pageByKey("Lab")!;
+  const method = pageByKey("Methodology")!;
+  const active = pathname === "/methodology" || pathname === "/lab";
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={`relative py-1 inline-flex items-center gap-1 outline-none transition-smooth hover:text-magenta-ink ${
+          active
+            ? "text-primary font-medium after:absolute after:inset-x-0 after:-bottom-[1.05rem] after:h-0.5 after:bg-magenta"
+            : "text-foreground/70"
+        }`}
+      >
+        Methodology <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[200px]">
+        <DropdownMenuItem asChild>
+          <Link to="/methodology" className="cursor-pointer">
+            <span className="font-medium">Methodology</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/lab" className="cursor-pointer flex flex-col items-start gap-0">
+            <span className="font-medium">{lab.navLabel ?? "The Lab"}</span>
+            <span className="text-xs text-muted-foreground">v3 shadow scores in validation</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/methodology#challenge" className="cursor-pointer">
+            <span className="text-muted-foreground">{method.navLabel}: audit &amp; challenge</span>
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 /* Institutional shell — typographic wordmark, serif/sans system, paper ground.
    No coin imagery anywhere. */
@@ -15,21 +56,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <nav className="container flex items-center justify-between h-16 gap-4" aria-label="Primary">
           <Wordmark className="text-xl" />
           <div className="hidden md:flex items-center gap-6 text-sm">
-            {NAV_PAGES.map((p) => (
-              <NavLink
-                key={p.path}
-                to={p.path}
-                className={({ isActive }) =>
-                  `relative py-1 transition-smooth hover:text-magenta-ink ${
-                    isActive
-                      ? "text-primary font-medium after:absolute after:inset-x-0 after:-bottom-[1.05rem] after:h-0.5 after:bg-magenta"
-                      : "text-foreground/70"
-                  }`
-                }
-              >
-                {p.navLabel ?? p.title}
-              </NavLink>
-            ))}
+            {NAV_PAGES.map((p) =>
+              p.key === "Methodology" ? <MethodologyMenu key={p.path} /> : (
+                <NavLink
+                  key={p.path}
+                  to={p.path}
+                  className={({ isActive }) =>
+                    `relative py-1 transition-smooth hover:text-magenta-ink ${
+                      isActive
+                        ? "text-primary font-medium after:absolute after:inset-x-0 after:-bottom-[1.05rem] after:h-0.5 after:bg-magenta"
+                        : "text-foreground/70"
+                    }`
+                  }
+                >
+                  {p.navLabel ?? p.title}
+                </NavLink>
+              )
+            )}
           </div>
           <Link
             to="/register"
