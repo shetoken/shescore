@@ -434,9 +434,7 @@ export default function Scores() {
                     <button onClick={() => setSelectedIndex("SHE Score")} className="text-magenta-ink hover:underline">Reset to SHE Score</button>
                   </div>
                 )}
-                {hoverScore != null && highlightIsos && highlightIsos.size > 0 ? (
-                  <div className="mb-2 text-xs text-magenta-ink">Highlighting {highlightIsos.size} countries near SHE Score {Math.round(hoverScore)}.</div>
-                ) : selectedTier != null ? (
+                {selectedTier != null ? (
                   <div className="mb-2 text-xs text-magenta-ink">
                     Showing <span className="font-medium">{TIERS[selectedTier].label}</span> · {countries.filter((c) => c.tier === selectedTier).length} countries.{" "}
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
