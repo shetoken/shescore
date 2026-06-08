@@ -18,6 +18,15 @@ import { Search, ArrowUpDown, Map as MapIcon, Table as TableIcon, ShieldAlert, C
 
 const C_GOOD = "#5BC289"; // green — high score / leading
 const C_BAD = "#E0606A";  // red — low score / critical
+const FEMALE_SHARE = 0.495;       // approx female share of population
+const WORLD_WOMEN_M = 3950;       // ~3.95B women worldwide (for "% of world women")
+const womenM = (popMillions?: number | null) => Math.round((popMillions ?? 0) * FEMALE_SHARE);
+// Precise women (millions) + a display formatter that keeps a decimal for small countries.
+const womenMexact = (popMillions?: number | null) => (popMillions ?? 0) * FEMALE_SHARE;
+const fmtWomenM = (popMillions?: number | null) => {
+  const w = womenMexact(popMillions);
+  return w >= 10 ? Math.round(w).toLocaleString() : w.toFixed(1);
+};
 
 const TIERS: Record<number, { label: string; color: string }> = {
   1: { label: "Tier 1 · Leading", color: "#5BC289" },
@@ -191,6 +200,29 @@ export default function Scores() {
   // Re-resolve the selected country against the versioned list (score is version-aware).
   const selectedDisplay = selected ? (countries.find((c) => c.iso_code === selected.iso_code) ?? selected) : null;
 
+  // Donut data labels (percentage on each slice) + leader lines.
+  const RADIAN = Math.PI / 180;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sliceLabel = ({ cx, cy, midAngle, outerRadius, percent, index }: any) => {
+    if (percent < 0.02) return null;
+    const r = outerRadius + 22;
+    const x = cx + r * Math.cos(-midAngle * RADIAN);
+    const y = cy + r * Math.sin(-midAngle * RADIAN);
+    return (
+      <text x={x} y={y} fill={tierData[index]?.color} fontSize={13} fontWeight={700}
+        textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">{(percent * 100).toFixed(1)}%</text>
+    );
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const leaderLine = ({ cx, cy, midAngle, outerRadius, percent, index }: any) => {
+    if (percent < 0.02) return <path />;
+    const x1 = cx + outerRadius * Math.cos(-midAngle * RADIAN);
+    const y1 = cy + outerRadius * Math.sin(-midAngle * RADIAN);
+    const x2 = cx + (outerRadius + 16) * Math.cos(-midAngle * RADIAN);
+    const y2 = cy + (outerRadius + 16) * Math.sin(-midAngle * RADIAN);
+    return <path d={`M${x1},${y1}L${x2},${y2}`} stroke={tierData[index]?.color} strokeOpacity={0.5} fill="none" />;
+  };
+
   return (
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
@@ -328,7 +360,7 @@ export default function Scores() {
         </section>
 
         {/* Charts */}
-        <section className="grid lg:grid-cols-2 gap-5">
+        <section className="space-y-5">
           {/* KDE distributions */}
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-start justify-between gap-3">
@@ -377,42 +409,46 @@ export default function Scores() {
                 <button onClick={() => setTierBy("women")} className={`px-2.5 py-1.5 border-l border-border ${tierBy === "women" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>By women affected</button>
               </div>
             </div>
-            <div className="mt-3 grid grid-cols-[150px_1fr] gap-4 items-center">
-              <div className="relative">
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" innerRadius={48} outerRadius={76} paddingAngle={2} stroke="none" isAnimationActive={false}>
-                      {tierData.map((d) => <Cell key={d.name} fill={d.color} />)}
-                    </Pie>
-                    <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-                      formatter={(v: number, n: string) => tierBy === "women"
-                        ? [`${Math.round(v * 0.495)}M women (${totalPop ? ((v / totalPop) * 100).toFixed(1) : 0}%)`, n]
-                        : [`${v} (${totalC ? ((v / totalC) * 100).toFixed(1) : 0}%)`, n]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                  {tierBy === "women" ? (
-                    <><div className="font-serif text-xl font-bold tnum leading-none">{Math.round(totalPop * 0.495).toLocaleString()}M</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">women</div></>
-                  ) : (
-                    <><div className="font-serif text-2xl font-bold tnum leading-none">{totalC}</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">countries</div></>
-                  )}
-                </div>
+            {/* Big donut with on-slice % data labels + leader lines */}
+            <div className="relative mt-2">
+              <ResponsiveContainer width="100%" height={320}>
+                <PieChart>
+                  <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
+                    innerRadius={78} outerRadius={120} paddingAngle={2} stroke="none" isAnimationActive={false}
+                    label={sliceLabel} labelLine={leaderLine}>
+                    {tierData.map((d) => <Cell key={d.name} fill={d.color} />)}
+                  </Pie>
+                  <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                    formatter={(v: number, n: string) => tierBy === "women"
+                      ? [`${womenM(v).toLocaleString()}M women (${totalPop ? ((v / totalPop) * 100).toFixed(1) : 0}%)`, n]
+                      : [`${v} countries (${totalC ? ((v / totalC) * 100).toFixed(1) : 0}%)`, n]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                {tierBy === "women" ? (
+                  <><div className="font-serif text-2xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">women tracked</div></>
+                ) : (
+                  <><div className="font-serif text-3xl font-bold tnum leading-none">{totalC}</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">countries</div></>
+                )}
               </div>
-              <div className="space-y-2.5">
-                {tierData.map((t) => {
-                  const pctC = totalC ? (t.count / totalC) * 100 : 0;
-                  const pctW = totalPop ? (t.pop / totalPop) * 100 : 0;
-                  return (
-                    <div key={t.name} className="text-sm">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: t.color }} />{t.name}</span>
-                        <span className="font-bold tnum shrink-0" style={{ color: t.color }}>{tierBy === "women" ? `${pctW.toFixed(1)}%` : `${t.count}`}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground pl-[18px] tnum">{pctC.toFixed(1)}% of countries · {pctW.toFixed(1)}% of women</div>
-                    </div>
-                  );
-                })}
-              </div>
+            </div>
+
+            {/* Legend below the plot */}
+            <div className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-2.5 border-t border-border pt-4">
+              {tierData.map((t) => {
+                const pctC = totalC ? (t.count / totalC) * 100 : 0;
+                const pctW = totalPop ? (t.pop / totalPop) * 100 : 0;
+                return (
+                  <div key={t.name} className="flex items-start justify-between gap-2 text-sm">
+                    <span className="flex items-center gap-2 font-medium"><span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: t.color }} />{t.name}</span>
+                    <span className="text-right tnum shrink-0">
+                      <span className="font-bold" style={{ color: t.color }}>{t.count}</span>
+                      <span className="text-muted-foreground"> · {pctC.toFixed(1)}% countries</span>
+                      <div className="text-xs text-muted-foreground">{pctW.toFixed(1)}% of women · {womenM(t.pop).toLocaleString()}M</div>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             <Link to="/compare" className="mt-4 inline-flex items-center gap-1 text-sm text-magenta-ink hover:underline">
               Compare countries side-by-side <ArrowRight className="h-3.5 w-3.5" />
@@ -482,6 +518,21 @@ function SelectedPanel({ country, onClose }: { country: CountryWEI | null; onClo
       </div>
       <div className="font-serif text-5xl font-bold tnum mt-2">{country.she_score?.toFixed(1)}</div>
       <div className="text-sm text-muted-foreground">SHE Score / 100</div>
+
+      {/* Tier tag + women stats */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {TIERS[country.tier] && (
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: TIERS[country.tier].color, background: `${TIERS[country.tier].color}1f` }}>
+            {TIERS[country.tier].label}
+          </span>
+        )}
+        <span className="text-xs font-mono px-2 py-1 rounded-md border border-border text-muted-foreground">{country.iso_code}</span>
+      </div>
+      <div className="mt-3 rounded-md bg-accent/30 px-3 py-2 text-sm">
+        <div className="flex justify-between"><span className="text-muted-foreground">Women in country</span><span className="font-semibold tnum">{fmtWomenM(country.population_millions)}M</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Share of world's women</span><span className="font-semibold tnum">{((womenMexact(country.population_millions) / WORLD_WOMEN_M) * 100).toFixed(2)}%</span></div>
+      </div>
+
       <div className="mt-4 space-y-2">
         {PILLARS.map((p) => {
           const raw = (country as unknown as Record<string, number>)[p.field] ?? 0;
