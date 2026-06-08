@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
+import { Maximize2 } from "lucide-react";
 import { CountryWEI } from "@/lib/api";
 
 // world-atlas@2, self-hosted (same-origin) so the map loads even where CDNs are
@@ -101,6 +102,8 @@ interface WorldMapProps {
   /** Optional content rendered above the map canvas, matching the map's width
       (not the legend column). Only used when legendSide="left". */
   mapHeader?: React.ReactNode;
+  /** When provided, an "Expand" button is overlaid inside the map canvas. */
+  onExpand?: () => void;
   /** When set & non-empty, these ISO-A3 countries are brightened and the rest are dimmed
       (used to cross-highlight from the distribution chart on hover). */
   highlightIsos?: Set<string>;
@@ -122,6 +125,7 @@ export function WorldMap({
   legendSide = "bottom",
   legendTop,
   mapHeader,
+  onExpand,
   highlightIsos,
   onHover,
 }: WorldMapProps) {
@@ -280,6 +284,14 @@ export function WorldMap({
     </ComposableMap>
   );
 
+  // "Expand" control overlaid inside the dark map canvas (top-right).
+  const expandBtn = onExpand ? (
+    <button onClick={onExpand} title="Expand the map full-screen"
+      className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-md border border-border/60 bg-card/90 backdrop-blur px-2 py-1 text-xs text-muted-foreground hover:border-magenta hover:text-magenta-ink transition-smooth shadow-card">
+      <Maximize2 className="h-3.5 w-3.5" /> Expand
+    </button>
+  ) : null;
+
   return (
     <div className="relative w-full select-none">
       {/* Floating tooltip */}
@@ -343,12 +355,14 @@ export function WorldMap({
         {legendSide === "left" ? (
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             {mapHeader}
-            <div className="rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a]">
+            <div className="relative rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a]">
+              {expandBtn}
               {mapCanvas}
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a]">
+          <div className="relative rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a]">
+            {expandBtn}
             {mapCanvas}
           </div>
         )}

@@ -575,12 +575,6 @@ export default function Scores() {
                 <button onClick={() => setView("map")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${view === "map" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}><MapIcon className="h-4 w-4" /> Map</button>
                 <button onClick={() => setView("table")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 border-l border-border ${view === "table" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}><TableIcon className="h-4 w-4" /> Table</button>
               </div>
-              {view === "map" && (
-                <button onClick={() => setMapPopout(true)} title="Expand the map full-screen"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:border-magenta transition-smooth">
-                  <Maximize2 className="h-4 w-4" /> Expand
-                </button>
-              )}
             </div>
           </div>
 
@@ -609,13 +603,9 @@ export default function Scores() {
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
                   </div>
                 ) : null}
-                <div className="relative">
-                  <button onClick={() => setMapPopout(true)} title="Expand the map full-screen"
-                    className="absolute top-1 right-1 z-10 inline-flex items-center gap-1 rounded-md border border-border bg-card/90 backdrop-blur px-2 py-1 text-xs text-muted-foreground hover:border-magenta hover:text-magenta-ink transition-smooth shadow-card">
-                    <Maximize2 className="h-3.5 w-3.5" /> Expand
-                  </button>
+                <div>
                   <WorldMap countries={countries} mapHeight={250} onSelect={setSelected} selectedIso={selected?.iso_code}
-                    legendSide="left"
+                    legendSide="left" onExpand={() => setMapPopout(true)}
                     mapHeader={<MetricsStrip stats={[
                       { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
                       { label: "Lowest", value: lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—", color: C_BAD },
