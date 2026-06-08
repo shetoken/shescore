@@ -214,7 +214,7 @@ export function WorldMap({
   ];
   const renderLegend = (vertical: boolean) => (
     <div className={`text-xs text-muted-foreground ${vertical
-      ? "flex flex-col items-start gap-1.5 shrink-0 self-start"
+      ? "flex flex-col items-start flex-1 justify-between"
       : "flex flex-wrap items-center gap-x-4 gap-y-1 justify-start mt-2"}`}>
       <span className="flex items-center gap-1.5">
         <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0 border-2" style={{ backgroundColor: "#475569", borderColor: "#ffffff" }} />
@@ -336,12 +336,13 @@ export function WorldMap({
         {legendSide === "left" && (
           <div className="flex flex-col shrink-0 self-stretch max-w-[130px]">
             {legendTop}
-            {!hideLegend && renderLegend(true)}
-            <div className="border-t border-border/40 mt-3" />
-            {/* Hint pushed into the space under the legend, centered & larger */}
-            <p className="flex-1 flex items-center justify-center text-center text-xs text-muted-foreground/55 leading-snug">
+            {/* Hint on top */}
+            <p className="text-xs text-muted-foreground/55 leading-snug">
               Scroll to zoom · Drag to pan · Click a country to select
             </p>
+            <div className="border-t border-border/40 my-2.5" />
+            {/* Legend below — fills the remaining height (≈ map canvas) */}
+            {!hideLegend && renderLegend(true)}
           </div>
         )}
         {legendSide === "left" ? (
