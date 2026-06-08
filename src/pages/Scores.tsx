@@ -373,16 +373,21 @@ export default function Scores() {
 
         {/* Companion indexes (display-only) */}
         <section>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">8 indexes · click to filter the chart · hover for methodology · comparison only, never inputs to the SHE Score</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+            8 indexes · {selectedDisplay
+              ? <>showing <span className="text-foreground font-medium normal-case">{selectedDisplay.country}</span>'s scores · <button onClick={() => setSelected(null)} className="text-magenta-ink hover:underline normal-case">global averages</button></>
+              : "global averages · select a country to see its scores"} · click to filter the chart · hover for methodology
+          </p>
           <div className="flex flex-wrap gap-2">
             <IndexCard
               code="SHE Score" desc="Women's Empowerment" native badge="NATIVE" color={INDEX_COLORS["SHE Score"]}
-              value={global != null ? global.toFixed(1) : "—"}
+              value={selectedDisplay ? (selectedDisplay.she_score?.toFixed(1) ?? "—") : (global != null ? global.toFixed(1) : "—")}
               title={SHE_METHOD[version].title} formula={SHE_METHOD[version].formula} note={SHE_METHOD[version].note}
               selected={selectedIndex === "SHE Score"} onClick={() => setSelectedIndex("SHE Score")}
             />
             {COMPANION_INDEXES.map((idx) => (
-              <IndexCard key={idx.code} code={idx.code} desc={idx.desc} value={idx.value.toFixed(1)}
+              <IndexCard key={idx.code} code={idx.code} desc={idx.desc}
+                value={selectedDisplay ? companionScore(selectedDisplay.iso_code, idx.code, idx.value).toFixed(1) : idx.value.toFixed(1)}
                 color={INDEX_COLORS[idx.code]} badge={idx.code === "Compliance" ? "DERIVED" : undefined}
                 title={idx.title} formula={idx.formula} note={idx.note}
                 selected={selectedIndex === idx.code} onClick={() => setSelectedIndex(idx.code)} />
@@ -566,8 +571,8 @@ export default function Scores() {
             </Link>
             <Link to="/clock" className="group rounded-lg border border-border bg-card p-5 hover:border-magenta transition-smooth">
               <Clock className="h-5 w-5 text-magenta-ink" />
-              <div className="mt-2 font-serif text-lg font-semibold">A year in the life</div>
-              <p className="mt-1 text-sm text-muted-foreground">What the numbers mean for 100 girls over a year — births, schooling, marriage, health and loss.</p>
+              <div className="mt-2 font-serif text-lg font-semibold">A day in the life</div>
+              <p className="mt-1 text-sm text-muted-foreground">What the numbers mean for 100 girls in a single day — births, schooling, marriage, health and loss.</p>
               <span className="mt-3 inline-flex items-center gap-1 text-sm text-magenta-ink">Open the figures <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" /></span>
             </Link>
           </div>
