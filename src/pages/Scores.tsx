@@ -149,7 +149,7 @@ export default function Scores() {
   const [hoverScore, setHoverScore] = useState<number | null>(null);
 
   const { data: summary } = useQuery({ queryKey: ["summary"], queryFn: api.summary, staleTime: 5 * 60 * 1000 });
-  const { data, isLoading, isError } = useQuery({ queryKey: ["scores-countries"], queryFn: () => api.wei.countries(105), staleTime: 5 * 60 * 1000 });
+  const { data, isLoading, isError } = useQuery({ queryKey: ["scores-countries"], queryFn: () => api.wei.countries(250), staleTime: 5 * 60 * 1000 });
 
   const rawCountries = data?.data ?? [];
   // v3 (SHADOW) reweights the five live pillars; v2 is the published score.
@@ -212,22 +212,20 @@ export default function Scores() {
 
   // Donut data labels (percentage on each slice) + leader lines.
   const RADIAN = Math.PI / 180;
-  // Multi-line on-slice label: tier name + % + count/women (replaces the legend).
+  // Compact on-slice label: tier name + % (full detail is in the hover tooltip).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sliceLabel = ({ cx, cy, midAngle, outerRadius, percent, index }: any) => {
     if (percent < 0.02) return null;
     const t = tierData[index];
     const short = t.name.split(" · ")[1] || t.name;
-    const val = tierBy === "women" ? `${womenM(t.pop).toLocaleString()}M women` : `${t.count} countries`;
-    const r = outerRadius + 22;
+    const r = outerRadius + 16;
     const x = cx + r * Math.cos(-midAngle * RADIAN);
     const y = cy + r * Math.sin(-midAngle * RADIAN);
     const anchor = x > cx ? "start" : "end";
     return (
       <text x={x} y={y} fill={t.color} textAnchor={anchor} dominantBaseline="central">
-        <tspan x={x} dy="-0.6em" fontSize={13} fontWeight={700}>{short}</tspan>
-        <tspan x={x} dy="1.25em" fontSize={11} fontWeight={600}>{(percent * 100).toFixed(1)}%</tspan>
-        <tspan dx="0.4em" fontSize={11} fontWeight={400} fill="hsl(var(--muted-foreground))">· {val}</tspan>
+        <tspan x={x} dy="-0.55em" fontSize={12} fontWeight={700}>{short}</tspan>
+        <tspan x={x} dy="1.2em" fontSize={12} fontWeight={600}>{(percent * 100).toFixed(1)}%</tspan>
       </text>
     );
   };
@@ -251,11 +249,13 @@ export default function Scores() {
     return (
       <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card w-[260px]">
         <div className="font-semibold mb-2">SHE Score ≈ {Math.round(label)} <span className="text-muted-foreground font-normal">· {near.length} countries</span></div>
-        <div className="space-y-1 mb-2">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 mb-2">
           {items.map((p) => (
-            <div key={p.name} className="flex items-center gap-2">
-              <span className="w-[88px] truncate shrink-0" style={{ color: p.color, opacity: p.name === selectedIndex ? 1 : 0.85, fontWeight: p.name === selectedIndex ? 700 : 400 }}>{p.name}</span>
-              <div className="flex-1 h-1.5 rounded-full bg-border/60 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${(p.value / maxV) * 100}%`, background: p.color }} /></div>
+            <div key={p.name} className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 truncate" style={{ color: p.color, fontWeight: p.name === selectedIndex ? 700 : 400 }}>
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ background: p.color }} />{p.name}
+              </span>
+              <span className="tnum text-muted-foreground shrink-0">{Math.round(p.value)}</span>
             </div>
           ))}
         </div>
@@ -292,23 +292,6 @@ export default function Scores() {
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
 
       <div className="container max-w-6xl py-8 space-y-8">
-        {/* v3 shadow banner */}
-        {version === "v3" && (
-          <div className="rounded-xl border-2 border-dashed border-gold/50 bg-gold/[0.06] p-4 flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-gold shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <div className="font-semibold text-gold">SHADOW — v3 in validation · does not affect the published score</div>
-              <p className="text-muted-foreground mt-0.5">
-                You're previewing the v3 methodology. It <strong className="text-foreground">reweights the five live pillars</strong> —
-                heavier Economic Inclusion and Safety (Crime Penalty), lighter Empowerment and Education — so the scores shift
-                versus v2, using only existing pillar data. Four further candidate pillars (Bodily Autonomy, Dignity &amp; Welfare,
-                Digital &amp; Social, expanded Safety &amp; Justice) are still gathering data and contribute nothing yet. See the
-                full breakdown in <Link to="/lab" className="text-gold hover:underline">The Lab</Link>.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Header */}
         <header>
           <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
@@ -324,6 +307,23 @@ export default function Scores() {
               </select>
             </label>
           </div>
+
+          {/* v3 shadow banner — directly below the methodology version dropdown */}
+          {version === "v3" && (
+            <div className="mb-4 rounded-xl border-2 border-dashed border-gold/50 bg-gold/[0.06] p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-gold shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <div className="font-semibold text-gold">SHADOW — v3 in validation · does not affect the published score</div>
+                <p className="text-muted-foreground mt-0.5">
+                  You're previewing the v3 methodology. It <strong className="text-foreground">reweights the five live pillars</strong> —
+                  heavier Economic Inclusion and Safety (Crime Penalty), lighter Empowerment and Education — so the scores shift
+                  versus v2, using only existing pillar data. Four further candidate pillars (Bodily Autonomy, Dignity &amp; Welfare,
+                  Digital &amp; Social, expanded Safety &amp; Justice) are still gathering data and contribute nothing yet. See the
+                  full breakdown in <Link to="/lab" className="text-gold hover:underline">The Lab</Link>.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="!text-3xl md:!text-4xl">
@@ -436,8 +436,8 @@ export default function Scores() {
           <p className="source-line">Source: SHE Score v2, {SITE.publisher}. Companion indexes are for reference only and are never inputs to the SHE Score.</p>
         </section>
 
-        {/* Charts */}
-        <section className="space-y-5">
+        {/* Charts — two tiles in one row */}
+        <section className="grid lg:grid-cols-2 gap-5 items-start">
           {/* KDE distributions */}
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-start justify-between gap-3">
@@ -498,10 +498,10 @@ export default function Scores() {
             </div>
             {/* Big donut with on-slice % data labels + leader lines */}
             <div className="relative mt-2">
-              <ResponsiveContainer width="100%" height={320}>
-                <PieChart>
+              <ResponsiveContainer width="100%" height={290}>
+                <PieChart margin={{ top: 6, bottom: 6, left: 30, right: 30 }}>
                   <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
-                    innerRadius={78} outerRadius={120} paddingAngle={2} stroke="none" isAnimationActive={false}
+                    innerRadius={58} outerRadius={88} paddingAngle={2} stroke="none" isAnimationActive={false}
                     label={sliceLabel} labelLine={leaderLine}>
                     {tierData.map((d) => <Cell key={d.name} fill={d.color} />)}
                   </Pie>
