@@ -21,21 +21,26 @@ function MethodologyMenu() {
       >
         Methodology <ChevronDown className="h-3.5 w-3.5 opacity-70" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[200px]">
+      <DropdownMenuContent align="start" className="min-w-[220px]">
         <DropdownMenuItem asChild>
-          <Link to="/methodology" className="cursor-pointer">
-            <span className="font-medium">Methodology</span>
+          <Link to="/methodology" className="cursor-pointer w-full">
+            <div className="w-full text-left">
+              <div className="font-medium">Methodology</div>
+              <div className="text-xs text-muted-foreground">The v2 formula, pillars &amp; data standard</div>
+            </div>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/lab" className="cursor-pointer flex flex-col items-start gap-0">
-            <span className="font-medium">{lab.navLabel ?? "The Lab"}</span>
-            <span className="text-xs text-muted-foreground">v3 shadow scores in validation</span>
+          <Link to="/lab" className="cursor-pointer w-full">
+            <div className="w-full text-left">
+              <div className="font-medium">{lab.navLabel ?? "The Lab"}</div>
+              <div className="text-xs text-muted-foreground">v3 shadow scores in validation</div>
+            </div>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/methodology#challenge" className="cursor-pointer">
-            <span className="text-muted-foreground">{method.navLabel}: audit &amp; challenge</span>
+          <Link to="/methodology#challenge" className="cursor-pointer w-full">
+            <div className="w-full text-left text-muted-foreground">Audit &amp; challenge process</div>
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
