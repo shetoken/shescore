@@ -5,10 +5,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { PAGES } from "@/config/manifest";
 import Placeholder from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
+import Home from "./pages/Home";
+import Methodology from "./pages/Methodology";
+import Scores from "./pages/Scores";
+import CountryProfile from "./pages/CountryProfile";
+import Explorer from "./pages/Explorer";
 
-/* shescore.org router. Routes are generated from the single page manifest so the
-   router, sitemap and prerenderer never drift. Task 3 swaps each Placeholder for
-   its real page component (keyed by page.key). */
+/* shescore.org router. Routes come from the single page manifest. Each page key
+   maps to its real component as it's built; unbuilt keys fall back to Placeholder. */
+
+import type { ComponentType } from "react";
+const PAGE_COMPONENTS: Record<string, ComponentType> = {
+  Home, Methodology, Scores, Explorer,
+};
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 2, staleTime: 5 * 60 * 1000 } },
@@ -20,9 +29,11 @@ const App = () => (
       <TooltipProvider>
         <BrowserRouter>
           <Routes>
-            {PAGES.map((p) => (
-              <Route key={p.path} path={p.path} element={<Placeholder page={p} />} />
-            ))}
+            {PAGES.map((p) => {
+              const C = PAGE_COMPONENTS[p.key];
+              return <Route key={p.path} path={p.path} element={C ? <C /> : <Placeholder page={p} />} />;
+            })}
+            <Route path="/scores/:iso" element={<CountryProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
