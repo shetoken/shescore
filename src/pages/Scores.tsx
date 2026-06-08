@@ -90,16 +90,16 @@ const gaussianKDE = (values: number[], h = 6) => (x: number) =>
   values.reduce((s, v) => s + Math.exp(-0.5 * ((x - v) / h) ** 2), 0);
 const bellAt = (x: number, mean: number, sd: number) => Math.exp(-0.5 * ((x - mean) / sd) ** 2);
 
-function IndexCard({ code, desc, value, native, color, badge, title, formula, note }: {
-  code: string; desc: string; value: string; native?: boolean; color: string; badge?: string; title: string; formula: Formula[]; note: string;
+function IndexCard({ code, desc, value, native, color, badge, title, formula, note, onClick, selected }: {
+  code: string; desc: string; value: string; native?: boolean; color: string; badge?: string; title: string; formula: Formula[]; note: string; onClick?: () => void; selected?: boolean;
 }) {
   // Native (SHE Score) reads in gold; companions in their own index colour.
   const accent = native ? "#E0B84E" : color;
   return (
     <Tooltip delayDuration={100}>
       <TooltipTrigger asChild>
-        <div className="rounded-lg px-4 py-2.5 cursor-default border-2"
-          style={{ borderColor: native ? accent : `${color}55`, background: `${accent}14` }}>
+        <div onClick={onClick} className="rounded-lg px-4 py-2.5 cursor-pointer border-2 transition-smooth"
+          style={{ borderColor: selected ? accent : (native ? accent : `${color}55`), background: `${accent}${selected ? "26" : "14"}`, boxShadow: selected ? `0 0 0 2px ${accent}` : undefined }}>
           <div className="flex items-center justify-between gap-1.5">
             <div className="text-xs font-bold" style={{ color: accent }}>{code}</div>
             {badge && <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground border border-border rounded px-1 py-px">{badge}</span>}
@@ -144,7 +144,8 @@ export default function Scores() {
   const [view, setView] = useState<"map" | "table">("map"); // map default
   const [selected, setSelected] = useState<CountryWEI | null>(null);
   const [version, setVersion] = useState<ApiVersion>("v2");
-  const [tierBy, setTierBy] = useState<"countries" | "women">("countries");
+  const [tierBy, setTierBy] = useState<"countries" | "women">("women");
+  const [selectedIndex, setSelectedIndex] = useState<string>("SHE Score");
 
   const { data: summary } = useQuery({ queryKey: ["summary"], queryFn: api.summary, staleTime: 5 * 60 * 1000 });
   const { data, isLoading, isError } = useQuery({ queryKey: ["scores-countries"], queryFn: () => api.wei.countries(105), staleTime: 5 * 60 * 1000 });
@@ -202,15 +203,23 @@ export default function Scores() {
 
   // Donut data labels (percentage on each slice) + leader lines.
   const RADIAN = Math.PI / 180;
+  // Multi-line on-slice label: tier name + % + count/women (replaces the legend).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sliceLabel = ({ cx, cy, midAngle, outerRadius, percent, index }: any) => {
     if (percent < 0.02) return null;
+    const t = tierData[index];
+    const short = t.name.split(" · ")[1] || t.name;
+    const val = tierBy === "women" ? `${womenM(t.pop).toLocaleString()}M women` : `${t.count} countries`;
     const r = outerRadius + 22;
     const x = cx + r * Math.cos(-midAngle * RADIAN);
     const y = cy + r * Math.sin(-midAngle * RADIAN);
+    const anchor = x > cx ? "start" : "end";
     return (
-      <text x={x} y={y} fill={tierData[index]?.color} fontSize={13} fontWeight={700}
-        textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">{(percent * 100).toFixed(1)}%</text>
+      <text x={x} y={y} fill={t.color} textAnchor={anchor} dominantBaseline="central">
+        <tspan x={x} dy="-0.6em" fontSize={13} fontWeight={700}>{short}</tspan>
+        <tspan x={x} dy="1.25em" fontSize={11} fontWeight={600}>{(percent * 100).toFixed(1)}%</tspan>
+        <tspan dx="0.4em" fontSize={11} fontWeight={400} fill="hsl(var(--muted-foreground))">· {val}</tspan>
+      </text>
     );
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,6 +231,32 @@ export default function Scores() {
     const y2 = cy + (outerRadius + 16) * Math.sin(-midAngle * RADIAN);
     return <path d={`M${x1},${y1}L${x2},${y2}`} stroke={tierData[index]?.color} strokeOpacity={0.5} fill="none" />;
   };
+
+  // KDE hover: list the indexes (most countries first) + the countries near the hovered score.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const kdeTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    const near = countries.filter((c) => Math.abs((c.she_score ?? 0) - label) <= 2.5).map((c) => c.country);
+    const items = [...payload].filter((p) => p.value != null).sort((a, b) => b.value - a.value);
+    return (
+      <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card max-w-[230px]">
+        <div className="font-semibold mb-1.5">SHE Score ≈ {Math.round(label)}</div>
+        <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+          {items.map((p) => (
+            <span key={p.name} className="inline-flex items-center gap-1" style={{ color: p.color, opacity: p.name === selectedIndex ? 1 : 0.75 }}>
+              <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />{p.name}
+            </span>
+          ))}
+        </div>
+        {near.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-border text-muted-foreground">
+            <span className="text-foreground/70">Countries here:</span> {near.slice(0, 6).join(", ")}{near.length > 6 ? ` +${near.length - 6} more` : ""}
+          </div>
+        )}
+      </div>
+    );
+  };
+  const emph = (code: string) => selectedIndex === code;
 
   return (
     <Layout>
@@ -283,17 +318,19 @@ export default function Scores() {
 
         {/* Companion indexes (display-only) */}
         <section>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">8 indexes · hover for methodology · comparison only, never inputs to the SHE Score</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">8 indexes · click to filter the chart · hover for methodology · comparison only, never inputs to the SHE Score</p>
           <div className="flex flex-wrap gap-2">
             <IndexCard
               code="SHE Score" desc="Women's Empowerment" native badge="NATIVE" color={INDEX_COLORS["SHE Score"]}
               value={global != null ? global.toFixed(1) : "—"}
               title={SHE_METHOD[version].title} formula={SHE_METHOD[version].formula} note={SHE_METHOD[version].note}
+              selected={selectedIndex === "SHE Score"} onClick={() => setSelectedIndex("SHE Score")}
             />
             {COMPANION_INDEXES.map((idx) => (
               <IndexCard key={idx.code} code={idx.code} desc={idx.desc} value={idx.value.toFixed(1)}
                 color={INDEX_COLORS[idx.code]} badge={idx.code === "Compliance" ? "DERIVED" : undefined}
-                title={idx.title} formula={idx.formula} note={idx.note} />
+                title={idx.title} formula={idx.formula} note={idx.note}
+                selected={selectedIndex === idx.code} onClick={() => setSelectedIndex(idx.code)} />
             ))}
           </div>
         </section>
@@ -324,7 +361,15 @@ export default function Scores() {
             </div>
           ) : view === "map" ? (
             <div className="grid lg:grid-cols-[1fr_300px] gap-4 items-start">
-              <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code} />
+              <div>
+                {selectedIndex !== "SHE Score" && (
+                  <div className="mb-2 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+                    Map shows the <span className="font-medium text-foreground">SHE Score</span>. Per-country
+                    <span className="font-medium" style={{ color: INDEX_COLORS[selectedIndex] }}> {selectedIndex}</span> data appears with the live API — the distribution above is filtered to it.
+                  </div>
+                )}
+                <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code} />
+              </div>
               <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} />
             </div>
           ) : (
@@ -378,13 +423,14 @@ export default function Scores() {
                 <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}>
                   <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis hide domain={[0, 112]} />
+                  <RTooltip cursor={{ stroke: "#E0B84E", strokeWidth: 1.5, strokeDasharray: "4 3" }} content={kdeTooltip} />
                   {selectedDisplay && (
                     <ReferenceLine x={selectedDisplay.she_score} stroke="#E0B84E" strokeDasharray="4 3"
                       label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
                   )}
-                  <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={2.5} dot={false} isAnimationActive={false} />
+                  <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.4} dot={false} isAnimationActive={false} />
                   {COMPANION_INDEXES.map((idx) => (
-                    <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={1.5} dot={false} isAnimationActive={false} opacity={0.85} />
+                    <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.4} dot={false} isAnimationActive={false} />
                   ))}
                 </LineChart>
               </ResponsiveContainer>
@@ -433,23 +479,6 @@ export default function Scores() {
               </div>
             </div>
 
-            {/* Legend below the plot */}
-            <div className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-2.5 border-t border-border pt-4">
-              {tierData.map((t) => {
-                const pctC = totalC ? (t.count / totalC) * 100 : 0;
-                const pctW = totalPop ? (t.pop / totalPop) * 100 : 0;
-                return (
-                  <div key={t.name} className="flex items-start justify-between gap-2 text-sm">
-                    <span className="flex items-center gap-2 font-medium"><span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: t.color }} />{t.name}</span>
-                    <span className="text-right tnum shrink-0">
-                      <span className="font-bold" style={{ color: t.color }}>{t.count}</span>
-                      <span className="text-muted-foreground"> · {pctC.toFixed(1)}% countries</span>
-                      <div className="text-xs text-muted-foreground">{pctW.toFixed(1)}% of women · {womenM(t.pop).toLocaleString()}M</div>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
             <Link to="/compare" className="mt-4 inline-flex items-center gap-1 text-sm text-magenta-ink hover:underline">
               Compare countries side-by-side <ArrowRight className="h-3.5 w-3.5" />
             </Link>
