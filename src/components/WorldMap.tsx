@@ -99,6 +99,9 @@ interface WorldMapProps {
   /** Where to place the legend: "bottom" (default, horizontal under the map) or
       "left" (vertical stack in the same row, to the left of the map canvas). */
   legendSide?: "bottom" | "left";
+  /** Optional content rendered above the left-stacked legend (e.g. a compact
+      readout for the selected country). Only used when legendSide="left". */
+  legendTop?: React.ReactNode;
   /** When set & non-empty, these ISO-A3 countries are brightened and the rest are dimmed
       (used to cross-highlight from the distribution chart on hover). */
   highlightIsos?: Set<string>;
@@ -118,6 +121,7 @@ export function WorldMap({
   colorFor,
   hideLegend,
   legendSide = "bottom",
+  legendTop,
   highlightIsos,
   onHover,
 }: WorldMapProps) {
@@ -265,9 +269,19 @@ export function WorldMap({
         </div>
       )}
 
+      {/* Interaction hint — above the map */}
+      <p className="text-left text-[11px] text-muted-foreground/40 mb-1 shrink-0">
+        Scroll to zoom · Drag to pan · Click a country to select
+      </p>
+
       {/* Map canvas (+ optional left-stacked legend in the same row) */}
       <div className={legendSide === "left" ? "flex items-stretch gap-4 flex-1 min-h-0" : ""}>
-        {legendSide === "left" && !hideLegend && renderLegend(true)}
+        {legendSide === "left" && (
+          <div className="flex flex-col gap-3 shrink-0 self-start">
+            {legendTop}
+            {!hideLegend && renderLegend(true)}
+          </div>
+        )}
         <div className={`rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] ${legendSide === "left" ? "flex-1 min-w-0 flex items-start justify-center" : ""}`}>
         <ComposableMap
           projection="geoMercator"
@@ -328,9 +342,6 @@ export function WorldMap({
 
       {/* Legend — bottom (horizontal) layout; "left" is rendered in the row above */}
       {!hideLegend && legendSide !== "left" && renderLegend(false)}
-      <p className="text-left text-[11px] text-muted-foreground/40 mt-1 shrink-0">
-        Scroll to zoom · Drag to pan · Click a country to select
-      </p>
     </div>
   );
 }

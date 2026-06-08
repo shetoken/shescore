@@ -445,6 +445,18 @@ export default function Scores() {
                 <div className="flex-1 min-h-0">
                   <WorldMap countries={countries} mapHeight={270} onSelect={setSelected} selectedIso={selected?.iso_code}
                     legendSide="left"
+                    legendTop={selectedDisplay ? (
+                      <div className="pb-2.5 border-b border-border/50 max-w-[130px]">
+                        <div className="text-[11px] font-semibold leading-tight">{selectedDisplay.country}</div>
+                        <div className="leading-none mt-1">
+                          <span className="font-serif text-lg font-bold tnum">{fmtWomenM(selectedDisplay.population_millions)}M</span>
+                          <span className="text-[11px] text-muted-foreground"> women</span>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                          {((womenMexact(selectedDisplay.population_millions) / WORLD_WOMEN_M) * 100).toFixed(2)}% of world's women
+                        </div>
+                      </div>
+                    ) : undefined}
                     highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                     scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
                 </div>
@@ -660,10 +672,6 @@ function SelectedPanel({ country, onClose, global, globalPillars, count }: {
           </span>
         )}
         <span className="text-xs font-mono px-2 py-1 rounded-md border border-border text-muted-foreground">{country.iso_code}</span>
-      </div>
-      <div className="mt-2 rounded-md bg-accent/30 px-3 py-1.5 text-xs">
-        <div className="flex justify-between"><span className="text-muted-foreground">Women in country</span><span className="font-semibold tnum">{fmtWomenM(country.population_millions)}M</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Share of world's women</span><span className="font-semibold tnum">{((womenMexact(country.population_millions) / WORLD_WOMEN_M) * 100).toFixed(2)}%</span></div>
       </div>
 
       <div className="mt-3 space-y-1.5">
