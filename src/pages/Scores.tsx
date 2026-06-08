@@ -42,17 +42,16 @@ function companionScore(iso: string, code: string, avg: number) {
 }
 
 // Severity categories ("bands") by SHE Score — same thresholds & colours as the
-// map. Five levels: Very High (75+) / High (60–74) / Moderate / Low / Critical.
+// map. Four levels: High (60+) / Moderate / Low / Critical.
 const BAND_DEFS = [
-  { key: 1, min: 75, label: "Very High", color: "#3E9D6F" },
-  { key: 2, min: 60, label: "High",      color: "#5BC289" },
-  { key: 3, min: 45, label: "Moderate",  color: "#E0B84E" },
-  { key: 4, min: 30, label: "Low",       color: "#E89C5A" },
-  { key: 5, min: 0,  label: "Critical",  color: "#E0606A" },
+  { key: 1, min: 60, label: "High",      color: "#5BC289" },
+  { key: 2, min: 45, label: "Moderate",  color: "#E0B84E" },
+  { key: 3, min: 30, label: "Low",       color: "#E89C5A" },
+  { key: 4, min: 0,  label: "Critical",  color: "#E0606A" },
 ];
 const BANDS: Record<number, { key: number; min: number; label: string; color: string }> =
   Object.fromEntries(BAND_DEFS.map((b) => [b.key, b]));
-const bandKey = (score?: number | null) => (BAND_DEFS.find((b) => (score ?? 0) >= b.min) ?? BAND_DEFS[4]).key;
+const bandKey = (score?: number | null) => (BAND_DEFS.find((b) => (score ?? 0) >= b.min) ?? BAND_DEFS[BAND_DEFS.length - 1]).key;
 
 type Formula = { label: string; weight?: string };
 
@@ -570,7 +569,7 @@ export default function Scores() {
                     mapHeader={<MetricsStrip stats={[
                       { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
                       { label: "Lowest", value: lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—", color: C_BAD },
-                      { label: "High +", value: `${highPlus} countries`, color: C_GOOD },
+                      { label: "High", value: `${highPlus} countries`, color: C_GOOD },
                       { label: "Critical", value: `${critical} countries`, color: C_BAD },
                     ]} />}
                     highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
@@ -642,7 +641,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, highPlu
         {/* category summary — mirrors the country panel's tag row so the two
             panels (and therefore the map) stay the same height */}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
-          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_GOOD, background: `${C_GOOD}1f` }}>{highPlus} High +</span>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_GOOD, background: `${C_GOOD}1f` }}>{highPlus} High</span>
           <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_BAD, background: `${C_BAD}1f` }}>{critical} Critical</span>
           <span className="text-xs text-muted-foreground tnum">{womenM(totalPop).toLocaleString()}M women</span>
         </div>

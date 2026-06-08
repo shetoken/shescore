@@ -41,22 +41,19 @@ const NUM_TO_ISO3: Record<string, string> = {
   "894": "ZMB", "51": "ARM",
 };
 
-// Map fill uses the same tier palette as the donut/tags. Tier 1 (Leading, 60+)
-// is split into two shades — 75+ (deep) and 60–74 — so the map keeps finer
-// detail while reading as the same 4 tiers everywhere else.
+// Map fill uses the same band palette as the donut/tags — one consistent set
+// of four severity categories.
 function scoreToColor(score: number | undefined | null): string {
   if (score == null) return "#1e293b";  // No data
-  if (score >= 75) return "#3E9D6F";    // Leading (75+)
-  if (score >= 60) return "#5BC289";    // Leading (60–74)
-  if (score >= 45) return "#E0B84E";    // Advancing
-  if (score >= 30) return "#E89C5A";    // Lagging
+  if (score >= 60) return "#5BC289";    // High
+  if (score >= 45) return "#E0B84E";    // Moderate
+  if (score >= 30) return "#E89C5A";    // Low
   return "#E0606A";                      // Critical
 }
 
 // Severity category from a SHE Score (matches the dashboard's bands).
 function scoreBandLabel(score: number | null | undefined): string {
   if (score == null) return "No data";
-  if (score >= 75) return "Very High";
   if (score >= 60) return "High";
   if (score >= 45) return "Moderate";
   if (score >= 30) return "Low";
@@ -204,8 +201,7 @@ export function WorldMap({
 
   // Legend items (shared by the bottom + left layouts).
   const legendSwatches = [
-    { color: "#3E9D6F", label: "75+  Very High" },
-    { color: "#5BC289", label: "60–74  High" },
+    { color: "#5BC289", label: "60+  High" },
     { color: "#E0B84E", label: "45–59  Moderate" },
     { color: "#E89C5A", label: "30–44  Low" },
     { color: "#E0606A", label: "<30  Critical" },
