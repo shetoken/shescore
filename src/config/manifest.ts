@@ -76,6 +76,20 @@ export const PAGES: PageMeta[] = [
     priority: "0.6", changefreq: "monthly",
   },
   {
+    path: "/safety", key: "Safety", nav: false,
+    title: "Women's Safety Map — A Travel-Advisory View | SHE Score",
+    description:
+      "A travel-advisory view of women's safety in 105 countries, shaded by the SHE Score's Safety (crime & violence) pillar, with state-level detail for India where verified data exists.",
+    priority: "0.6", changefreq: "monthly",
+  },
+  {
+    path: "/clock", key: "Clock", nav: false,
+    title: "A Day in the Life — What the Numbers Mean for 100 Girls | SHE Score",
+    description:
+      "What the SHE Score's five pillars mean for 100 girls growing up today — schooling, marriage, work, health and safety, translated from the data into human terms.",
+    priority: "0.6", changefreq: "monthly",
+  },
+  {
     path: "/community", key: "Community", nav: true, navLabel: "Initiatives",
     title: "The Initiative Repository — Programs That Move the Score | SHE Score",
     description:
