@@ -338,7 +338,7 @@ export default function Scores() {
 
       <div className="container max-w-7xl py-2 space-y-1.5">
         {/* What the SHE Score is — intro above the headline */}
-        <p className="text-sm text-muted-foreground max-w-4xl">
+        <p className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">The SHE Score</span> — the published score (v2) is computed from five live pillars:
           Empowerment (25%), Education &amp; Literacy (20%), Economic Inclusion (20%), Health &amp; Survival (15%) and Safety (Crime Penalty, −20%).
           Four further pillars are in validation; published annually, quarterly for registered governments.
