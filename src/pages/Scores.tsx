@@ -374,7 +374,7 @@ export default function Scores() {
         <section>
           <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">
             8 indexes · {selectedDisplay
-              ? <>showing <span className="text-foreground font-medium normal-case">{selectedDisplay.country}</span>'s scores · <button onClick={() => setSelected(null)} className="text-magenta-ink hover:underline normal-case">global averages</button></>
+              ? <>showing <span className="text-foreground font-medium normal-case">{selectedDisplay.country}</span>'s scores · <button onClick={() => setSelected(null)} className="text-magenta-ink hover:underline normal-case">← show global averages</button></>
               : "global averages · select a country to see its scores"} · click to filter · hover for methodology
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1.5">
@@ -480,10 +480,10 @@ export default function Scores() {
           )}
         </section>
 
-        {/* Charts — two tiles in one row */}
-        <section className="grid lg:grid-cols-2 gap-3 items-start">
+        {/* Charts + Explore — three tiles in one row */}
+        <section className="grid lg:grid-cols-[1.15fr_1fr_0.8fr] gap-3 items-stretch">
           {/* KDE distributions */}
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="rounded-lg border border-border bg-card p-3 flex flex-col">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold">Score distributions · {totalC} countries
                 {selectedDisplay && <span className="font-normal text-muted-foreground"> · {selectedDisplay.iso_code} {selectedDisplay.she_score?.toFixed(1)}</span>}
@@ -498,7 +498,7 @@ export default function Scores() {
               </div>
             </div>
             <div className="mt-2">
-              <ResponsiveContainer width="100%" height={208}>
+              <ResponsiveContainer width="100%" height={188}>
                 <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}
                   onMouseMove={(s) => setHoverScore(typeof s?.activeLabel === "number" ? s.activeLabel : null)}
                   onMouseLeave={() => setHoverScore(null)}>
@@ -527,20 +527,20 @@ export default function Scores() {
           </div>
 
           {/* Tier distribution donut */}
-          <div className="rounded-lg border border-border bg-card p-3">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="rounded-lg border border-border bg-card p-3 flex flex-col">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <h3 className="text-sm font-semibold">Distribution by tier</h3>
-              <div className="inline-flex rounded-md border border-border overflow-hidden text-xs">
-                <button onClick={() => setTierBy("countries")} className={`px-2.5 py-1 ${tierBy === "countries" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>By countries</button>
-                <button onClick={() => setTierBy("women")} className={`px-2.5 py-1 border-l border-border ${tierBy === "women" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>By women affected</button>
+              <div className="inline-flex rounded-md border border-border overflow-hidden text-[11px]">
+                <button onClick={() => setTierBy("countries")} className={`px-2 py-1 ${tierBy === "countries" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>Countries</button>
+                <button onClick={() => setTierBy("women")} className={`px-2 py-1 border-l border-border ${tierBy === "women" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>Women</button>
               </div>
             </div>
             {/* Big donut with on-slice % data labels + leader lines */}
-            <div className="relative mt-1">
-              <ResponsiveContainer width="100%" height={214}>
-                <PieChart margin={{ top: 4, bottom: 4, left: 30, right: 30 }}>
+            <div className="relative mt-1 flex-1">
+              <ResponsiveContainer width="100%" height={196}>
+                <PieChart margin={{ top: 4, bottom: 4, left: 24, right: 24 }}>
                   <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
-                    innerRadius={46} outerRadius={72} paddingAngle={2} stroke="none" isAnimationActive={false}
+                    innerRadius={42} outerRadius={62} paddingAngle={2} stroke="none" isAnimationActive={false}
                     label={sliceLabel} labelLine={leaderLine} cursor="pointer"
                     onMouseEnter={(_, i) => setHoverTier(i + 1)} onMouseLeave={() => setHoverTier(null)}
                     onClick={(_, i) => setSelectedTier((t) => (t === i + 1 ? null : i + 1))}>
@@ -554,34 +554,31 @@ export default function Scores() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
                 {tierBy === "women" ? (
-                  <><div className="font-serif text-2xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">women</div></>
+                  <><div className="font-serif text-xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[9px] uppercase tracking-wider text-muted-foreground">women</div></>
                 ) : (
-                  <><div className="font-serif text-3xl font-bold tnum leading-none">{totalC}</div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">countries</div></>
+                  <><div className="font-serif text-2xl font-bold tnum leading-none">{totalC}</div><div className="text-[9px] uppercase tracking-wider text-muted-foreground">countries</div></>
                 )}
               </div>
             </div>
 
-            <Link to="/compare" className="mt-1 inline-flex items-center gap-1 text-sm text-magenta-ink hover:underline">
-              Compare countries side-by-side <ArrowRight className="h-3.5 w-3.5" />
+            <Link to="/compare" className="mt-1 inline-flex items-center gap-1 text-xs text-magenta-ink hover:underline">
+              Compare countries <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-        </section>
 
-        {/* Explore the data */}
-        <section>
-          <h2 className="text-xl mb-4">Explore the data</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Link to="/safety" className="group rounded-lg border border-border bg-card p-5 hover:border-magenta transition-smooth">
+          {/* Explore the data — two stacked tiles in the same row */}
+          <div className="flex flex-col gap-3 h-full">
+            <Link to="/safety" className="group flex-1 rounded-lg border border-border bg-card p-3 hover:border-magenta transition-smooth flex flex-col">
               <ShieldAlert className="h-5 w-5 text-magenta-ink" />
-              <div className="mt-2 font-serif text-lg font-semibold">Women's safety map</div>
-              <p className="mt-1 text-sm text-muted-foreground">Travel-advisory view by the Safety pillar, with country and state-level detail.</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-sm text-magenta-ink">Open the safety map <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" /></span>
+              <div className="mt-1.5 font-serif text-base font-semibold leading-tight">Women's safety map</div>
+              <p className="mt-0.5 text-xs text-muted-foreground leading-snug">Travel-advisory view by the Safety pillar, country &amp; state-level.</p>
+              <span className="mt-auto pt-1.5 inline-flex items-center gap-1 text-xs text-magenta-ink">Open the safety map <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
             </Link>
-            <Link to="/clock" className="group rounded-lg border border-border bg-card p-5 hover:border-magenta transition-smooth">
+            <Link to="/clock" className="group flex-1 rounded-lg border border-border bg-card p-3 hover:border-magenta transition-smooth flex flex-col">
               <Clock className="h-5 w-5 text-magenta-ink" />
-              <div className="mt-2 font-serif text-lg font-semibold">A day in the life</div>
-              <p className="mt-1 text-sm text-muted-foreground">What the numbers mean for 100 girls in a single day — births, schooling, marriage, health and loss.</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-sm text-magenta-ink">Open the figures <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" /></span>
+              <div className="mt-1.5 font-serif text-base font-semibold leading-tight">A day in the life</div>
+              <p className="mt-0.5 text-xs text-muted-foreground leading-snug">What the numbers mean for 100 girls in a single day.</p>
+              <span className="mt-auto pt-1.5 inline-flex items-center gap-1 text-xs text-magenta-ink">Open the figures <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
             </Link>
           </div>
         </section>
