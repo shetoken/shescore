@@ -44,12 +44,13 @@
     --gold: 40 58% 45%;              /* highlight-only — badges, key stats */
     --gold-foreground: 30 8% 12%;
 
-    /* Five LIVE-pillar categorical palette (all AA on paper ground) */
-    --pillar-empowerment: 280 40% 42%;   /* purple */
-    --pillar-education:    212 55% 40%;   /* blue */
-    --pillar-economic:     168 48% 30%;   /* teal-green */
-    --pillar-health:       344 52% 44%;   /* rose */
-    --pillar-safety:        26 62% 38%;   /* burnt orange */
+    /* Five LIVE-pillar categorical palette — synced with src/theme/pillars.ts.
+       Each passes WCAG AA (>=4.5:1) as text on the paper ground. */
+    --pillar-empowerment: 272 43% 42%;   /* #6A3D9A purple */
+    --pillar-education:    208 68% 40%;   /* #2166AC blue */
+    --pillar-economic:     140 63% 29%;   /* #1B7837 green */
+    --pillar-health:       330 53% 42%;   /* #A23263 rose */
+    --pillar-safety:        28 73% 41%;   /* #B5651D burnt orange */
 
     /* Sidebar (shadcn contract; unused but defined to avoid invalid vars) */
     --sidebar-background: 38 33% 97%;
@@ -70,9 +71,19 @@
   * { @apply border-border; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "kern", "liga";
+    font-feature-settings: "kern", "liga", "calt";
+    text-rendering: optimizeLegibility;
   }
-  h1, h2, h3, h4 { @apply font-serif; }
+  /* Typography-led institutional scale. Serif display headings, clean sans body. */
+  h1, h2, h3, h4 { @apply font-serif text-primary; letter-spacing: -0.01em; line-height: 1.15; }
+  h1 { @apply text-4xl md:text-5xl font-bold; }
+  h2 { @apply text-2xl md:text-3xl font-semibold; }
+  h3 { @apply text-xl font-semibold; }
+  p { @apply leading-relaxed; }
+  a { @apply underline-offset-2; }
+  /* Visible keyboard focus everywhere (a11y). */
+  :focus-visible { @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background rounded-sm; }
+  ::selection { background: hsl(var(--burgundy) / 0.14); }
 }
 
 @layer utilities {
@@ -82,5 +93,10 @@
   .bg-gradient-primary { background: hsl(var(--primary)); }
   .shadow-card { box-shadow: var(--shadow-card); }
   .transition-smooth { transition: var(--transition-smooth); }
-  .source-line { @apply text-xs text-muted-foreground mt-2; }
+  /* Source line under every chart/table (data-portal convention). */
+  .source-line { @apply text-xs text-muted-foreground mt-2 italic; }
+  /* Tabular figures for stat blocks and score columns. */
+  .tnum { font-variant-numeric: tabular-nums; }
+  /* Subtle paper rule between sections. */
+  .rule { @apply border-t border-border; }
 }
