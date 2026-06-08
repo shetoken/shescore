@@ -11,7 +11,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         Skip to content
       </a>
 
-      <header className="border-b border-border bg-background/90 backdrop-blur sticky top-0 z-40">
+      <header className="border-t-[3px] border-t-magenta border-b border-border bg-background/90 backdrop-blur sticky top-0 z-40">
         <nav className="container flex items-center justify-between h-16 gap-4" aria-label="Primary">
           <Wordmark className="text-xl" />
           <div className="hidden md:flex items-center gap-6 text-sm">
@@ -20,9 +20,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 key={p.path}
                 to={p.path}
                 className={({ isActive }) =>
-                  `relative py-1 transition-smooth hover:text-primary ${
+                  `relative py-1 transition-smooth hover:text-magenta-ink ${
                     isActive
-                      ? "text-primary font-medium after:absolute after:inset-x-0 after:-bottom-[1.05rem] after:h-0.5 after:bg-gold"
+                      ? "text-primary font-medium after:absolute after:inset-x-0 after:-bottom-[1.05rem] after:h-0.5 after:bg-magenta"
                       : "text-foreground/70"
                   }`
                 }

@@ -7,7 +7,7 @@ export function SectionHeading({
   return (
     <div className={`max-w-3xl ${className}`}>
       {eyebrow && (
-        <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(var(--gold))] mb-2">{eyebrow}</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-magenta-ink mb-2">{eyebrow}</p>
       )}
       <h2 id={id} className="scroll-mt-24">{title}</h2>
       {lead && <p className="mt-3 text-lg text-foreground/75">{lead}</p>}

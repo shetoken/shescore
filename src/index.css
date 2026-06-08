@@ -34,15 +34,20 @@
 
     --border: 30 14% 86%;
     --input: 30 14% 86%;
-    --ring: 327 62% 25%;
+    --ring: 333 62% 44%;             /* magenta accent focus ring */
 
     --radius: 0.5rem;
 
     /* Brand */
     --burgundy: 327 62% 15%;
     --burgundy-foreground: 38 33% 97%;
-    --gold: 40 58% 45%;              /* highlight-only — badges, key stats */
+    --gold: 40 58% 45%;              /* highlight-only — data status (LIVE, verified) */
     --gold-foreground: 30 8% 12%;
+    /* Magenta accent — the brand "heart". Bright variant for rules/underlines/dots;
+       darker `ink` variant for accent TEXT (passes AA on the paper ground). */
+    --magenta: 336 72% 58%;          /* ≈ #E24D88 */
+    --magenta-foreground: 0 0% 100%;
+    --magenta-ink: 333 62% 44%;      /* ≈ #B5276A — AA as text on paper */
 
     /* Five LIVE-pillar categorical palette — synced with src/theme/pillars.ts.
        Each passes WCAG AA (>=4.5:1) as text on the paper ground. */

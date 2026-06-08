@@ -17,7 +17,7 @@ export default function Placeholder({ page }: { page: PageMeta }) {
       <section className="border-b border-border bg-gradient-to-b from-secondary/30 to-background">
         <div className="container py-14 md:py-20 max-w-3xl">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-[hsl(var(--gold))]">
+            <span className="text-xs font-semibold uppercase tracking-widest text-magenta-ink">
               {isHome ? "Open data on women's empowerment" : "SHE Score"}
             </span>
             {isHome && <LiveBadge />}

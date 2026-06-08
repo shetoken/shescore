@@ -57,6 +57,11 @@ export default {
         /* Brand */
         burgundy: { DEFAULT: "hsl(var(--burgundy))", foreground: "hsl(var(--burgundy-foreground))" },
         gold: { DEFAULT: "hsl(var(--gold))", foreground: "hsl(var(--gold-foreground))" },
+        magenta: {
+          DEFAULT: "hsl(var(--magenta))",
+          foreground: "hsl(var(--magenta-foreground))",
+          ink: "hsl(var(--magenta-ink))",
+        },
         /* Five LIVE-pillar categorical palette (WCAG AA on paper ground) */
         pillar: {
           empowerment: "hsl(var(--pillar-empowerment))",
