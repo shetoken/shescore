@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -208,12 +208,15 @@ export default function Scores() {
   const tier1 = countries.filter((c) => c.tier === 1).length;
   const tier4 = countries.filter((c) => c.tier === 4).length;
 
-  // Default the selected country to Iceland once data loads.
+  // Default the selected country to Iceland ONCE on first load — so deselecting
+  // (panel ×, or the "global averages" link) sticks and reverts to global scores.
+  const didInitSelection = useRef(false);
   useEffect(() => {
-    if (!selected && rawCountries.length) {
+    if (!didInitSelection.current && rawCountries.length) {
+      didInitSelection.current = true;
       setSelected(rawCountries.find((c) => c.iso_code === "ISL") ?? rawCountries[0]);
     }
-  }, [rawCountries, selected]);
+  }, [rawCountries]);
   // Re-resolve the selected country against the versioned list (score is version-aware).
   const selectedDisplay = selected ? (countries.find((c) => c.iso_code === selected.iso_code) ?? selected) : null;
 
