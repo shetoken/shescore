@@ -10,13 +10,20 @@ import Methodology from "./pages/Methodology";
 import Scores from "./pages/Scores";
 import CountryProfile from "./pages/CountryProfile";
 import Explorer from "./pages/Explorer";
+import About from "./pages/About";
+import Governance from "./pages/Governance";
+import Privacy from "./pages/Privacy";
+import Data from "./pages/Data";
+import Register from "./pages/Register";
+import Landscape from "./pages/Landscape";
+import Lab from "./pages/Lab";
 
 /* shescore.org router. Routes come from the single page manifest. Each page key
    maps to its real component as it's built; unbuilt keys fall back to Placeholder. */
 
 import type { ComponentType } from "react";
 const PAGE_COMPONENTS: Record<string, ComponentType> = {
-  Home, Methodology, Scores, Explorer,
+  Home, Methodology, Scores, Explorer, About, Governance, Privacy, Data, Register, Landscape, Lab,
 };
 
 const queryClient = new QueryClient({
