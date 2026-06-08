@@ -314,24 +314,6 @@ export default function Scores() {
   };
   const emph = (code: string) => selectedIndex === code;
 
-  // Themed donut tooltip.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const donutTooltip = ({ active, payload }: any) => {
-    if (!active || !payload?.length) return null;
-    const t = payload[0].payload;
-    const pctC = totalC ? (t.count / totalC) * 100 : 0;
-    const pctW = totalPop ? (t.pop / totalPop) * 100 : 0;
-    return (
-      <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-card">
-        <div className="font-semibold flex items-center gap-2 mb-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: t.color }} />{t.name}</div>
-        <div className="space-y-0.5">
-          <div className="flex justify-between gap-4"><span className="text-muted-foreground">Countries</span><span className="tnum font-medium">{t.count} ({pctC.toFixed(1)}%)</span></div>
-          <div className="flex justify-between gap-4"><span className="text-muted-foreground">Women</span><span className="tnum font-medium">{womenM(t.pop).toLocaleString()}M ({pctW.toFixed(1)}%)</span></div>
-        </div>
-      </div>
-    );
-  };
-
   // KDE distribution card (placed in the left column under the map).
   const kdeCard = (
     <div className="rounded-lg border border-border bg-card p-3">
