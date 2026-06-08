@@ -269,16 +269,22 @@ export function WorldMap({
         </div>
       )}
 
-      {/* Interaction hint — above the map */}
-      <p className="text-left text-[11px] text-muted-foreground/40 mb-1 shrink-0">
-        Scroll to zoom · Drag to pan · Click a country to select
-      </p>
+      {/* Interaction hint — above the map (bottom-legend layout only; the
+          left layout shows it inside the legend column instead) */}
+      {legendSide !== "left" && (
+        <p className="text-left text-[11px] text-muted-foreground/40 mb-1 shrink-0">
+          Scroll to zoom · Drag to pan · Click a country to select
+        </p>
+      )}
 
       {/* Map canvas (+ optional left-stacked legend in the same row) */}
       <div className={legendSide === "left" ? "flex items-stretch gap-4 flex-1 min-h-0" : ""}>
         {legendSide === "left" && (
-          <div className="flex flex-col gap-3 shrink-0 self-start">
+          <div className="flex flex-col gap-2.5 shrink-0 self-start max-w-[130px]">
             {legendTop}
+            <p className="text-[10px] text-muted-foreground/50 leading-snug">
+              Scroll to zoom · Drag to pan · Click a country to select
+            </p>
             {!hideLegend && renderLegend(true)}
           </div>
         )}

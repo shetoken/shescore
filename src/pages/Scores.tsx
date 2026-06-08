@@ -647,6 +647,10 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
       </div>
     );
   }
+  // Share of the world's women — rounded to a whole percent (no decimal) to
+  // keep the chip row on one line; tiny shares collapse to "<1%".
+  const sharePct = (womenMexact(country.population_millions) / WORLD_WOMEN_M) * 100;
+  const sharePctStr = sharePct >= 0.5 ? `${Math.round(sharePct)}%` : "<1%";
   return (
     <div className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-24">
       <div className="flex items-start justify-between">
@@ -668,7 +672,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
             {TIERS[country.tier].label}
           </span>
         )}
-        <span className="text-xs text-muted-foreground tnum">{fmtWomenM(country.population_millions)}M women <span className="text-foreground/55">({((womenMexact(country.population_millions) / WORLD_WOMEN_M) * 100).toFixed(2)}%)</span></span>
+        <span className="text-xs text-muted-foreground tnum">{fmtWomenM(country.population_millions)}M women <span className="text-foreground/55">({sharePctStr})</span></span>
       </div>
 
       <div className="mt-2 space-y-1">
