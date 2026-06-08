@@ -331,7 +331,7 @@ export default function Scores() {
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
 
-      <div className="container max-w-7xl py-4 space-y-4">
+      <div className="container max-w-7xl py-3 space-y-3">
         {/* Header */}
         <header>
           <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
@@ -366,9 +366,9 @@ export default function Scores() {
           )}
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="!text-3xl md:!text-4xl">
+              <h1 className="!text-2xl md:!text-3xl">
                 Global SHE Score: <span className="tnum text-gold">{global != null ? global.toFixed(1) : "…"}</span>
-                <span className="text-muted-foreground font-normal text-xl"> / 100</span>
+                <span className="text-muted-foreground font-normal text-lg"> / 100</span>
                 {version === "v3" && <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-widest text-gold border border-gold/50 rounded px-1.5 py-0.5">V3 SHADOW</span>}
               </h1>
               <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
@@ -411,8 +411,8 @@ export default function Scores() {
 
         {/* Country Explorer */}
         <section>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="text-xl">Country Explorer <span className="text-sm font-normal text-muted-foreground">{countries.length} countries</span></h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <h2 className="text-lg">Country Explorer <span className="text-sm font-normal text-muted-foreground">{countries.length} countries</span></h2>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -451,7 +451,7 @@ export default function Scores() {
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
                   </div>
                 ) : null}
-                <WorldMap countries={countries} mapHeight={380} onSelect={setSelected} selectedIso={selected?.iso_code}
+                <WorldMap countries={countries} mapHeight={340} onSelect={setSelected} selectedIso={selected?.iso_code}
                   highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                   scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
               </div>
