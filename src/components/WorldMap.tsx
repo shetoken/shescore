@@ -96,6 +96,9 @@ interface WorldMapProps {
   colorFor?: (score: number | null | undefined) => string;
   /** Hide the built-in SHE Score-tier legend (e.g. when the page shows its own legend). */
   hideLegend?: boolean;
+  /** Where to place the legend: "bottom" (default, horizontal under the map) or
+      "left" (vertical stack in the same row, to the left of the map canvas). */
+  legendSide?: "bottom" | "left";
   /** When set & non-empty, these ISO-A3 countries are brightened and the rest are dimmed
       (used to cross-highlight from the distribution chart on hover). */
   highlightIsos?: Set<string>;
@@ -114,6 +117,7 @@ export function WorldMap({
   subnationalIsos,
   colorFor,
   hideLegend,
+  legendSide = "bottom",
   highlightIsos,
   onHover,
 }: WorldMapProps) {
@@ -191,6 +195,38 @@ export function WorldMap({
     [getDataForGeo, navigate, onSelect]
   );
 
+  // Legend items (shared by the bottom + left layouts).
+  const legendSwatches = [
+    { color: "#10b981", label: "75+  High" },
+    { color: "#22c55e", label: "60–74  Good" },
+    { color: "#eab308", label: "45–59  Moderate" },
+    { color: "#f97316", label: "30–44  Low" },
+    { color: "#ef4444", label: "<30  Critical" },
+    { color: "#1e293b", label: "No data" },
+  ];
+  const renderLegend = (vertical: boolean) => (
+    <div className={`text-xs text-muted-foreground ${vertical
+      ? "flex flex-col items-start gap-1.5 shrink-0"
+      : "flex flex-wrap items-center gap-x-4 gap-y-1 justify-start mt-2"}`}>
+      <span className="flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0 border-2" style={{ backgroundColor: "#475569", borderColor: "#ffffff" }} />
+        Selected
+      </span>
+      {legendSwatches.map(({ color, label }) => (
+        <span key={label} className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0" style={{ backgroundColor: color }} />
+          {label}
+        </span>
+      ))}
+      {subnationalIsos && subnationalIsos.size > 0 && (
+        <span className="flex items-center gap-1.5">
+          <span className="w-3.5 h-2 inline-block flex-shrink-0 rounded-sm border-2 border-dashed" style={{ borderColor: "#fcd34d" }} />
+          State-level data
+        </span>
+      )}
+    </div>
+  );
+
   return (
     <div className="relative w-full select-none">
       {/* Floating tooltip */}
@@ -229,8 +265,10 @@ export function WorldMap({
         </div>
       )}
 
-      {/* Map canvas */}
-      <div className="rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a]">
+      {/* Map canvas (+ optional left-stacked legend in the same row) */}
+      <div className={legendSide === "left" && !hideLegend ? "flex items-start gap-4" : ""}>
+        {legendSide === "left" && !hideLegend && renderLegend(true)}
+        <div className={`rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] ${legendSide === "left" ? "flex-1 min-w-0" : ""}`}>
         <ComposableMap
           projection="geoMercator"
           projectionConfig={{ scale: 138, center: [10, 18] }}
@@ -285,42 +323,11 @@ export function WorldMap({
             </Geographies>
           </ZoomableGroup>
         </ComposableMap>
+        </div>
       </div>
 
-      {/* Legend */}
-      {!hideLegend && (
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 justify-start mt-2 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span
-            className="w-3 h-3 rounded-sm inline-block flex-shrink-0 border-2"
-            style={{ backgroundColor: "#475569", borderColor: "#ffffff" }}
-          />
-          Selected
-        </span>
-        {[
-          { color: "#10b981", label: "75+  High" },
-          { color: "#22c55e", label: "60–74  Good" },
-          { color: "#eab308", label: "45–59  Moderate" },
-          { color: "#f97316", label: "30–44  Low" },
-          { color: "#ef4444", label: "<30  Critical" },
-          { color: "#1e293b", label: "No data" },
-        ].map(({ color, label }) => (
-          <span key={label} className="flex items-center gap-1.5">
-            <span
-              className="w-3 h-3 rounded-sm inline-block flex-shrink-0"
-              style={{ backgroundColor: color }}
-            />
-            {label}
-          </span>
-        ))}
-        {subnationalIsos && subnationalIsos.size > 0 && (
-          <span className="flex items-center gap-1.5">
-            <span className="w-3.5 h-2 inline-block flex-shrink-0 rounded-sm border-2 border-dashed" style={{ borderColor: "#fcd34d" }} />
-            State-level data
-          </span>
-        )}
-      </div>
-      )}
+      {/* Legend — bottom (horizontal) layout; "left" is rendered in the row above */}
+      {!hideLegend && legendSide !== "left" && renderLegend(false)}
       <p className="text-left text-[11px] text-muted-foreground/40 mt-1">
         Scroll to zoom · Drag to pan · Click a country to select
       </p>

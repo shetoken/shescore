@@ -446,6 +446,7 @@ export default function Scores() {
                   </div>
                 ) : null}
                 <WorldMap countries={countries} mapHeight={270} onSelect={setSelected} selectedIso={selected?.iso_code}
+                  legendSide="left"
                   highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                   scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
               </div>
