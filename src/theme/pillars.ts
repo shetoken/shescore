@@ -2,10 +2,9 @@
    system. Every chart series, badge, repository filter and legend pulls colour
    and label from here, so the palette is consistent everywhere.
 
-   Colours are a categorical, ColorBrewer-derived set; each passes WCAG AA (≥4.5:1)
-   as text on the warm paper ground (#FAF8F5), and they remain distinguishable for
-   colour-vision deficiencies. Keep these hexes in sync with the --pillar-* CSS
-   variables in src/index.css. */
+   Colours are a categorical set lightened for legibility on the dark slate ground,
+   and they remain distinguishable for colour-vision deficiencies. Keep these hexes
+   in sync with the --pillar-* CSS variables in src/index.css. */
 
 export interface Pillar {
   key: "empowerment" | "education" | "economic" | "health" | "safety";
@@ -24,11 +23,11 @@ export interface Pillar {
 }
 
 export const PILLARS: Pillar[] = [
-  { key: "empowerment", engineKey: "empowerment",        field: "empowerment_score", label: "Empowerment",          weight: 0.25,  weightLabel: "25%",  hex: "#6A3D9A", textClass: "text-pillar-empowerment" },
-  { key: "education",   engineKey: "education_literacy",  field: "education_score",   label: "Education & Literacy", weight: 0.20,  weightLabel: "20%",  hex: "#2166AC", textClass: "text-pillar-education" },
-  { key: "economic",    engineKey: "economic_inclusion",  field: "economic_score",    label: "Economic Inclusion",   weight: 0.20,  weightLabel: "20%",  hex: "#1B7837", textClass: "text-pillar-economic" },
-  { key: "health",      engineKey: "health_survival",     field: "health_score",      label: "Health & Survival",    weight: 0.15,  weightLabel: "15%",  hex: "#A23263", textClass: "text-pillar-health" },
-  { key: "safety",      engineKey: "safety_crime_penalty",field: "violence_penalty_score", label: "Safety (Crime Penalty)", weight: -0.20, weightLabel: "−20%", hex: "#B5651D", textClass: "text-pillar-safety", penalty: true },
+  { key: "empowerment", engineKey: "empowerment",        field: "empowerment_score", label: "Empowerment",          weight: 0.25,  weightLabel: "25%",  hex: "#A78BD8", textClass: "text-pillar-empowerment" },
+  { key: "education",   engineKey: "education_literacy",  field: "education_score",   label: "Education & Literacy", weight: 0.20,  weightLabel: "20%",  hex: "#5FA0DB", textClass: "text-pillar-education" },
+  { key: "economic",    engineKey: "economic_inclusion",  field: "economic_score",    label: "Economic Inclusion",   weight: 0.20,  weightLabel: "20%",  hex: "#5BC289", textClass: "text-pillar-economic" },
+  { key: "health",      engineKey: "health_survival",     field: "health_score",      label: "Health & Survival",    weight: 0.15,  weightLabel: "15%",  hex: "#E37FA9", textClass: "text-pillar-health" },
+  { key: "safety",      engineKey: "safety_crime_penalty",field: "violence_penalty_score", label: "Safety (Crime Penalty)", weight: -0.20, weightLabel: "−20%", hex: "#E89C5A", textClass: "text-pillar-safety", penalty: true },
 ];
 
 export const pillarByKey = (key: string) => PILLARS.find((p) => p.key === key);

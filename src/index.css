@@ -8,66 +8,68 @@
    this is the working base + the CSS-var contract the shared UI primitives use.) */
 @layer base {
   :root {
-    --background: 38 33% 97%;        /* warm paper-white #FAF8F5 */
-    --foreground: 30 8% 12%;         /* near-black warm ink */
+    /* Dark slate ground (from the brand reference). Warm off-white ink. */
+    --background: 222 17% 30%;       /* slate-navy ≈ #404757 */
+    --foreground: 40 30% 95%;        /* warm off-white */
 
-    --card: 0 0% 100%;
-    --card-foreground: 30 8% 12%;
+    --card: 222 15% 34%;             /* raised slate surface */
+    --card-foreground: 40 30% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 8% 12%;
+    --popover: 222 16% 33%;
+    --popover-foreground: 40 30% 95%;
 
-    --primary: 327 62% 15%;          /* deep burgundy #3d0f28 */
-    --primary-foreground: 38 33% 97%;
+    /* On dark, "primary" is the light tone: headings, wordmark, light CTA. */
+    --primary: 40 30% 95%;
+    --primary-foreground: 222 18% 20%;
 
-    --secondary: 36 24% 92%;
-    --secondary-foreground: 327 45% 20%;
+    --secondary: 222 14% 37%;
+    --secondary-foreground: 40 30% 92%;
 
-    --muted: 36 20% 91%;
-    --muted-foreground: 30 6% 40%;
+    --muted: 222 13% 38%;
+    --muted-foreground: 220 13% 78%;
 
-    --accent: 36 30% 90%;            /* subtle warm — shadcn hover/active surfaces */
-    --accent-foreground: 327 50% 20%;
+    --accent: 222 14% 39%;           /* shadcn hover/active surfaces */
+    --accent-foreground: 40 30% 92%;
 
-    --destructive: 0 68% 42%;
+    --destructive: 0 62% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 14% 86%;
-    --input: 30 14% 86%;
-    --ring: 333 62% 44%;             /* magenta accent focus ring */
+    --border: 222 12% 44%;
+    --input: 222 12% 44%;
+    --ring: 336 82% 72%;             /* magenta accent focus ring (light on dark) */
 
     --radius: 0.5rem;
 
     /* Brand */
-    --burgundy: 327 62% 15%;
-    --burgundy-foreground: 38 33% 97%;
-    --gold: 40 58% 45%;              /* highlight-only — data status (LIVE, verified) */
-    --gold-foreground: 30 8% 12%;
-    /* Magenta accent — the brand "heart". Bright variant for rules/underlines/dots;
-       darker `ink` variant for accent TEXT (passes AA on the paper ground). */
-    --magenta: 336 72% 58%;          /* ≈ #E24D88 */
+    --burgundy: 40 30% 95%;          /* repurposed light on dark (text-gradient/selection) */
+    --burgundy-foreground: 222 18% 20%;
+    --gold: 42 78% 64%;              /* highlight-only — data status (LIVE, verified) */
+    --gold-foreground: 222 18% 16%;
+    /* Magenta accent — the brand "heart". Bright for rules/underlines/dots;
+       the `ink` variant is the light tone used for accent TEXT on the dark ground. */
+    --magenta: 336 78% 62%;          /* ≈ #E85C92 */
     --magenta-foreground: 0 0% 100%;
-    --magenta-ink: 333 62% 44%;      /* ≈ #B5276A — AA as text on paper */
+    --magenta-ink: 336 82% 72%;      /* light magenta for eyebrows/links on dark */
 
     /* Five LIVE-pillar categorical palette — synced with src/theme/pillars.ts.
-       Each passes WCAG AA (>=4.5:1) as text on the paper ground. */
-    --pillar-empowerment: 272 43% 42%;   /* #6A3D9A purple */
-    --pillar-education:    208 68% 40%;   /* #2166AC blue */
-    --pillar-economic:     140 63% 29%;   /* #1B7837 green */
-    --pillar-health:       330 53% 42%;   /* #A23263 rose */
-    --pillar-safety:        28 73% 41%;   /* #B5651D burnt orange */
+       Lightened for legibility on the dark slate ground. */
+    --pillar-empowerment: 262 50% 70%;   /* #A78BD8 light purple */
+    --pillar-education:    209 63% 62%;   /* #5FA0DB light blue */
+    --pillar-economic:     147 46% 56%;   /* #5BC289 light green */
+    --pillar-health:       335 64% 69%;   /* #E37FA9 light rose */
+    --pillar-safety:        28 76% 63%;   /* #E89C5A light orange */
 
     /* Sidebar (shadcn contract; unused but defined to avoid invalid vars) */
-    --sidebar-background: 38 33% 97%;
-    --sidebar-foreground: 30 8% 12%;
-    --sidebar-primary: 327 62% 15%;
-    --sidebar-primary-foreground: 38 33% 97%;
-    --sidebar-accent: 36 30% 90%;
-    --sidebar-accent-foreground: 327 50% 20%;
-    --sidebar-border: 30 14% 86%;
-    --sidebar-ring: 327 62% 25%;
+    --sidebar-background: 222 17% 30%;
+    --sidebar-foreground: 40 30% 95%;
+    --sidebar-primary: 40 30% 95%;
+    --sidebar-primary-foreground: 222 18% 20%;
+    --sidebar-accent: 222 14% 39%;
+    --sidebar-accent-foreground: 40 30% 92%;
+    --sidebar-border: 222 12% 44%;
+    --sidebar-ring: 336 82% 72%;
 
-    --shadow-card: 0 1px 3px hsl(30 20% 20% / 0.08), 0 8px 24px -12px hsl(30 20% 20% / 0.12);
+    --shadow-card: 0 1px 2px hsl(222 40% 8% / 0.4), 0 10px 30px -14px hsl(222 40% 6% / 0.55);
     --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
@@ -88,7 +90,7 @@
   a { @apply underline-offset-2; }
   /* Visible keyboard focus everywhere (a11y). */
   :focus-visible { @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background rounded-sm; }
-  ::selection { background: hsl(var(--burgundy) / 0.14); }
+  ::selection { background: hsl(var(--magenta) / 0.35); color: hsl(var(--foreground)); }
 }
 
 @layer utilities {
