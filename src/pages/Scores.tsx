@@ -472,7 +472,7 @@ export default function Scores() {
                     scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
                 </div>
               </div>
-              <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} />
+              <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} tier1={tier1} tier4={tier4} />
             </div>
           ) : (
             <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -635,16 +635,23 @@ export default function Scores() {
   );
 }
 
-function SelectedPanel({ country, onClose, global, globalPillars, count }: {
-  country: CountryWEI | null; onClose: () => void; global: number | null; globalPillars: Record<string, number>; count: number;
+function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, tier4 }: {
+  country: CountryWEI | null; onClose: () => void; global: number | null; globalPillars: Record<string, number>; count: number; tier1: number; tier4: number;
 }) {
   if (!country) {
     return (
       <div className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-24">
-        <div className="text-xs text-muted-foreground">Global average · {count} countries</div>
-        <div className="flex items-baseline gap-2">
+        <div className="text-xs text-muted-foreground">All scored countries · {count}</div>
+        <div className="font-serif text-lg font-bold">World</div>
+        <div className="flex items-baseline gap-2 mt-1">
           <div className="font-serif text-4xl font-bold tnum text-gold">{global != null ? global.toFixed(1) : "—"}</div>
           <div className="text-xs text-muted-foreground">SHE Score / 100</div>
+        </div>
+        {/* tier summary — mirrors the country panel's tier tag row so the two
+            panels (and therefore the map) stay the same height */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: C_GOOD, background: `${C_GOOD}1f` }}>{tier1} Leading</span>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: C_BAD, background: `${C_BAD}1f` }}>{tier4} Critical</span>
         </div>
         <div className="mt-3 space-y-1.5">
           {PILLARS.map((p) => {
@@ -657,7 +664,9 @@ function SelectedPanel({ country, onClose, global, globalPillars, count }: {
             );
           })}
         </div>
-        <p className="mt-3 text-xs text-muted-foreground text-center">Click a country on the map for its own breakdown.</p>
+        <div className="mt-3 rounded-md border border-dashed border-border px-4 py-2 text-sm text-center text-muted-foreground">
+          Click a country for its breakdown
+        </div>
       </div>
     );
   }
