@@ -41,13 +41,16 @@ const NUM_TO_ISO3: Record<string, string> = {
   "894": "ZMB", "51": "ARM",
 };
 
+// Map fill uses the same tier palette as the donut/tags. Tier 1 (Leading, 60+)
+// is split into two shades — 75+ (deep) and 60–74 — so the map keeps finer
+// detail while reading as the same 4 tiers everywhere else.
 function scoreToColor(score: number | undefined | null): string {
-  if (score == null) return "#1e293b";
-  if (score >= 75) return "#10b981";
-  if (score >= 60) return "#22c55e";
-  if (score >= 45) return "#eab308";
-  if (score >= 30) return "#f97316";
-  return "#ef4444";
+  if (score == null) return "#1e293b";  // No data
+  if (score >= 75) return "#3E9D6F";    // Leading (75+)
+  if (score >= 60) return "#5BC289";    // Leading (60–74)
+  if (score >= 45) return "#E0B84E";    // Advancing
+  if (score >= 30) return "#E89C5A";    // Lagging
+  return "#E0606A";                      // Critical
 }
 
 const TIER_LABELS: Record<number, string> = {
@@ -205,11 +208,11 @@ export function WorldMap({
 
   // Legend items (shared by the bottom + left layouts).
   const legendSwatches = [
-    { color: "#10b981", label: "75+  High" },
-    { color: "#22c55e", label: "60–74  Good" },
-    { color: "#eab308", label: "45–59  Moderate" },
-    { color: "#f97316", label: "30–44  Low" },
-    { color: "#ef4444", label: "<30  Critical" },
+    { color: "#3E9D6F", label: "75+  Leading" },
+    { color: "#5BC289", label: "60–74  Leading" },
+    { color: "#E0B84E", label: "45–59  Advancing" },
+    { color: "#E89C5A", label: "30–44  Lagging" },
+    { color: "#E0606A", label: "<30  Critical" },
     { color: "#1e293b", label: "No data" },
   ];
   const renderLegend = (vertical: boolean) => (
