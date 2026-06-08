@@ -150,6 +150,16 @@ function StatCard({ label, value, color }: { label: string; value: string; color
   );
 }
 
+/* Ultra-compact inline stat pill for the header bar. */
+function StatChip({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs">
+      <span className="uppercase tracking-wider text-[10px] text-muted-foreground">{label}</span>
+      <span className="font-semibold tnum" style={color ? { color } : undefined}>{value}</span>
+    </span>
+  );
+}
+
 export default function Scores() {
   const meta = pageByKey("Scores")!;
   const [search, setSearch] = useState("");
@@ -331,68 +341,52 @@ export default function Scores() {
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
 
-      <div className="container max-w-7xl py-3 space-y-3">
-        {/* Header */}
-        <header>
-          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/[0.06] px-3 py-1 text-xs text-gold">
-              <Sparkles className="h-3 w-3" /> SHE Score data · {summary?.countries_scored ?? totalC} countries scored
+      <div className="container max-w-7xl py-2 space-y-1.5">
+        {/* Header — single compact bar */}
+        <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="!text-xl md:!text-2xl !mb-0">
+              Global SHE Score: <span className="tnum text-gold">{global != null ? global.toFixed(1) : "…"}</span>
+              <span className="text-muted-foreground font-normal text-base"> / 100</span>
+              {version === "v3" && <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-widest text-gold border border-gold/50 rounded px-1.5 py-0.5">V3 SHADOW</span>}
+            </h1>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/[0.06] px-2.5 py-0.5 text-xs text-gold">
+              <Sparkles className="h-3 w-3" /> {summary?.countries_scored ?? totalC} countries · 2025
             </span>
-            <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-              Methodology version
-              <select value={version} onChange={(e) => setVersion(e.target.value as ApiVersion)}
-                className={`h-8 rounded-md border bg-card px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring ${version === "v3" ? "border-gold/60 text-gold" : "border-border"}`}>
-                <option value="v2">v2 — Official</option>
-                <option value="v3">v3 — Shadow preview</option>
-              </select>
-            </label>
           </div>
-
-          {/* v3 shadow banner — directly below the methodology version dropdown */}
-          {version === "v3" && (
-            <div className="mb-4 rounded-xl border-2 border-dashed border-gold/50 bg-gold/[0.06] p-4 flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-gold shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <div className="font-semibold text-gold">SHADOW — v3 in validation · does not affect the published score</div>
-                <p className="text-muted-foreground mt-0.5">
-                  You're previewing the v3 methodology. It <strong className="text-foreground">reweights the five live pillars</strong> —
-                  heavier Economic Inclusion and Safety (Crime Penalty), lighter Empowerment and Education — so the scores shift
-                  versus v2, using only existing pillar data. Four further candidate pillars (Bodily Autonomy, Dignity &amp; Welfare,
-                  Digital &amp; Social, expanded Safety &amp; Justice) are still gathering data and contribute nothing yet. See the
-                  full breakdown in <Link to="/lab" className="text-gold hover:underline">The Lab</Link>.
-                </p>
-              </div>
-            </div>
-          )}
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="!text-2xl md:!text-3xl">
-                Global SHE Score: <span className="tnum text-gold">{global != null ? global.toFixed(1) : "…"}</span>
-                <span className="text-muted-foreground font-normal text-lg"> / 100</span>
-                {version === "v3" && <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-widest text-gold border border-gold/50 rounded px-1.5 py-0.5">V3 SHADOW</span>}
-              </h1>
-              <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
-                SHE Score · v2 baseline
-                <span className="inline-flex items-center gap-1 rounded-full bg-pillar-economic/15 text-pillar-economic px-2 py-0.5 text-xs">● 2025 dataset</span>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <StatCard label="Highest" value={highC ? `${highC.country} · ${highC.she_score.toFixed(1)}` : "—"} color={C_GOOD} />
-              <StatCard label="Lowest" value={lowC ? `${lowC.country} · ${lowC.she_score.toFixed(1)}` : "—"} color={C_BAD} />
-              <StatCard label="Tier 1" value={`${tier1} countries`} color={C_GOOD} />
-              <StatCard label="Critical" value={`${tier4} countries`} color={C_BAD} />
-            </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <StatChip label="Highest" value={highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—"} color={C_GOOD} />
+            <StatChip label="Lowest" value={lowC ? `${lowC.country} ${lowC.she_score.toFixed(1)}` : "—"} color={C_BAD} />
+            <StatChip label="Tier 1" value={`${tier1}`} color={C_GOOD} />
+            <StatChip label="Critical" value={`${tier4}`} color={C_BAD} />
+            <select value={version} onChange={(e) => setVersion(e.target.value as ApiVersion)}
+              title="Methodology version"
+              className={`h-8 rounded-md border bg-card px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring ${version === "v3" ? "border-gold/60 text-gold" : "border-border"}`}>
+              <option value="v2">v2 — Official</option>
+              <option value="v3">v3 — Shadow preview</option>
+            </select>
           </div>
         </header>
 
+        {/* v3 shadow banner — slim one-line strip */}
+        {version === "v3" && (
+          <div className="rounded-lg border border-dashed border-gold/50 bg-gold/[0.06] px-3 py-1.5 flex items-center gap-2 text-xs">
+            <AlertTriangle className="h-4 w-4 text-gold shrink-0" />
+            <span className="text-muted-foreground">
+              <strong className="text-gold">SHADOW — does not affect the published score.</strong> v3 reweights the five live pillars (heavier Economic Inclusion &amp; Safety, lighter Empowerment &amp; Education). Four candidate pillars are still gathering data.{" "}
+              <Link to="/lab" className="text-gold hover:underline">The Lab →</Link>
+            </span>
+          </div>
+        )}
+
         {/* Companion indexes (display-only) */}
         <section>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">
             8 indexes · {selectedDisplay
               ? <>showing <span className="text-foreground font-medium normal-case">{selectedDisplay.country}</span>'s scores · <button onClick={() => setSelected(null)} className="text-magenta-ink hover:underline normal-case">global averages</button></>
-              : "global averages · select a country to see its scores"} · click to filter the chart · hover for methodology
+              : "global averages · select a country to see its scores"} · click to filter · hover for methodology
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <IndexCard
               code="SHE Score" desc="Women's Empowerment" native badge="NATIVE" color={INDEX_COLORS["SHE Score"]}
               value={selectedDisplay ? (selectedDisplay.she_score?.toFixed(1) ?? "—") : (global != null ? global.toFixed(1) : "—")}
@@ -411,17 +405,17 @@ export default function Scores() {
 
         {/* Country Explorer */}
         <section>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-            <h2 className="text-lg">Country Explorer <span className="text-sm font-normal text-muted-foreground">{countries.length} countries</span></h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-1.5">
+            <h2 className="text-base !mb-0">Country Explorer <span className="text-xs font-normal text-muted-foreground">{countries.length} countries</span></h2>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…"
-                  className="h-9 w-44 rounded-md border border-border bg-card pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  className="h-8 w-44 rounded-md border border-border bg-card pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div className="inline-flex rounded-md border border-border overflow-hidden text-sm">
-                <button onClick={() => setView("map")} className={`inline-flex items-center gap-1.5 px-3 py-2 ${view === "map" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}><MapIcon className="h-4 w-4" /> Map</button>
-                <button onClick={() => setView("table")} className={`inline-flex items-center gap-1.5 px-3 py-2 border-l border-border ${view === "table" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}><TableIcon className="h-4 w-4" /> Table</button>
+                <button onClick={() => setView("map")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${view === "map" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}><MapIcon className="h-4 w-4" /> Map</button>
+                <button onClick={() => setView("table")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 border-l border-border ${view === "table" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}><TableIcon className="h-4 w-4" /> Table</button>
               </div>
             </div>
           </div>
@@ -451,7 +445,7 @@ export default function Scores() {
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
                   </div>
                 ) : null}
-                <WorldMap countries={countries} mapHeight={340} onSelect={setSelected} selectedIso={selected?.iso_code}
+                <WorldMap countries={countries} mapHeight={270} onSelect={setSelected} selectedIso={selected?.iso_code}
                   highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                   scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
               </div>
@@ -486,32 +480,27 @@ export default function Scores() {
               </table></div>
             </div>
           )}
-          <p className="source-line">Source: SHE Score v2, {SITE.publisher}. Companion indexes are for reference only and are never inputs to the SHE Score.</p>
         </section>
 
         {/* Charts — two tiles in one row */}
-        <section className="grid lg:grid-cols-2 gap-5 items-start">
+        <section className="grid lg:grid-cols-2 gap-3 items-start">
           {/* KDE distributions */}
-          <div className="rounded-lg border border-border bg-card p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-base font-semibold">Score distributions — {totalC} countries</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Each curve is one of the {1 + COMPANION_INDEXES.length} indexes — separate scoring systems, not SHE Score sub-pillars.
-                  {selectedDisplay && <> Dashed line = {selectedDisplay.country} ({selectedDisplay.she_score?.toFixed(1)}).</>}
-                </p>
-              </div>
+          <div className="rounded-lg border border-border bg-card p-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold">Score distributions · {totalC} countries
+                {selectedDisplay && <span className="font-normal text-muted-foreground"> · {selectedDisplay.iso_code} {selectedDisplay.she_score?.toFixed(1)}</span>}
+              </h3>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2.5 py-1" style={{ color: INDEX_COLORS[selectedIndex], borderColor: `${INDEX_COLORS[selectedIndex]}66` }}>
-                  <span className="h-2 w-2 rounded-full" style={{ background: INDEX_COLORS[selectedIndex] }} /> Highlighting {selectedIndex}
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2 py-0.5" style={{ color: INDEX_COLORS[selectedIndex], borderColor: `${INDEX_COLORS[selectedIndex]}66` }}>
+                  <span className="h-2 w-2 rounded-full" style={{ background: INDEX_COLORS[selectedIndex] }} /> {selectedIndex}
                 </span>
                 {selectedIndex !== "SHE Score" && (
                   <button onClick={() => setSelectedIndex("SHE Score")} className="text-xs text-muted-foreground hover:text-foreground">Reset</button>
                 )}
               </div>
             </div>
-            <div className="mt-3">
-              <ResponsiveContainer width="100%" height={230}>
+            <div className="mt-2">
+              <ResponsiveContainer width="100%" height={208}>
                 <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}
                   onMouseMove={(s) => setHoverScore(typeof s?.activeLabel === "number" ? s.activeLabel : null)}
                   onMouseLeave={() => setHoverScore(null)}>
@@ -532,32 +521,28 @@ export default function Scores() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+            <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 mt-1.5 text-[11px] text-muted-foreground">
               {["SHE Score", ...COMPANION_INDEXES.map((i) => i.code)].map((code) => (
-                <span key={code} className="inline-flex items-center gap-1.5"><span className="h-0.5 w-3.5 rounded-full" style={{ background: INDEX_COLORS[code] }} />{code}</span>
+                <span key={code} className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded-full" style={{ background: INDEX_COLORS[code] }} />{code}</span>
               ))}
             </div>
-            <p className="source-line">SHE Score curve from live/baseline data; companion curves are illustrative placeholders until live data.</p>
           </div>
 
           {/* Tier distribution donut */}
-          <div className="rounded-lg border border-border bg-card p-5">
-            <div className="flex items-start justify-between gap-3 flex-wrap">
-              <div>
-                <h3 className="text-base font-semibold">Country distribution by tier</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">By share of countries, or share of women affected.</p>
-              </div>
+          <div className="rounded-lg border border-border bg-card p-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h3 className="text-sm font-semibold">Distribution by tier</h3>
               <div className="inline-flex rounded-md border border-border overflow-hidden text-xs">
-                <button onClick={() => setTierBy("countries")} className={`px-2.5 py-1.5 ${tierBy === "countries" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>By countries</button>
-                <button onClick={() => setTierBy("women")} className={`px-2.5 py-1.5 border-l border-border ${tierBy === "women" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>By women affected</button>
+                <button onClick={() => setTierBy("countries")} className={`px-2.5 py-1 ${tierBy === "countries" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>By countries</button>
+                <button onClick={() => setTierBy("women")} className={`px-2.5 py-1 border-l border-border ${tierBy === "women" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>By women affected</button>
               </div>
             </div>
             {/* Big donut with on-slice % data labels + leader lines */}
-            <div className="relative mt-2">
-              <ResponsiveContainer width="100%" height={290}>
-                <PieChart margin={{ top: 6, bottom: 6, left: 30, right: 30 }}>
+            <div className="relative mt-1">
+              <ResponsiveContainer width="100%" height={214}>
+                <PieChart margin={{ top: 4, bottom: 4, left: 30, right: 30 }}>
                   <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
-                    innerRadius={58} outerRadius={88} paddingAngle={2} stroke="none" isAnimationActive={false}
+                    innerRadius={46} outerRadius={72} paddingAngle={2} stroke="none" isAnimationActive={false}
                     label={sliceLabel} labelLine={leaderLine} cursor="pointer"
                     onMouseEnter={(_, i) => setHoverTier(i + 1)} onMouseLeave={() => setHoverTier(null)}
                     onClick={(_, i) => setSelectedTier((t) => (t === i + 1 ? null : i + 1))}>
@@ -578,7 +563,7 @@ export default function Scores() {
               </div>
             </div>
 
-            <Link to="/compare" className="mt-4 inline-flex items-center gap-1 text-sm text-magenta-ink hover:underline">
+            <Link to="/compare" className="mt-1 inline-flex items-center gap-1 text-sm text-magenta-ink hover:underline">
               Compare countries side-by-side <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -632,12 +617,13 @@ function SelectedPanel({ country, onClose, global, globalPillars, count }: {
 }) {
   if (!country) {
     return (
-      <div className="rounded-lg border border-border bg-card p-5 lg:sticky lg:top-24">
+      <div className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-24">
         <div className="text-xs text-muted-foreground">Global average · {count} countries</div>
-        <div className="font-serif text-xl font-bold">Global</div>
-        <div className="font-serif text-5xl font-bold tnum mt-2 text-gold">{global != null ? global.toFixed(1) : "—"}</div>
-        <div className="text-sm text-muted-foreground">SHE Score / 100</div>
-        <div className="mt-4 space-y-2">
+        <div className="flex items-baseline gap-2">
+          <div className="font-serif text-4xl font-bold tnum text-gold">{global != null ? global.toFixed(1) : "—"}</div>
+          <div className="text-xs text-muted-foreground">SHE Score / 100</div>
+        </div>
+        <div className="mt-3 space-y-1.5">
           {PILLARS.map((p) => {
             const raw = globalPillars[p.field] ?? 0;
             return (
@@ -648,24 +634,26 @@ function SelectedPanel({ country, onClose, global, globalPillars, count }: {
             );
           })}
         </div>
-        <p className="mt-4 text-xs text-muted-foreground text-center">Click a country on the map for its own breakdown.</p>
+        <p className="mt-3 text-xs text-muted-foreground text-center">Click a country on the map for its own breakdown.</p>
       </div>
     );
   }
   return (
-    <div className="rounded-lg border border-border bg-card p-5 lg:sticky lg:top-24">
+    <div className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-24">
       <div className="flex items-start justify-between">
         <div>
           <div className="text-xs text-muted-foreground">{country.region} · Rank #{country.rank}</div>
-          <div className="font-serif text-xl font-bold">{country.country}</div>
+          <div className="font-serif text-lg font-bold">{country.country}</div>
         </div>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
       </div>
-      <div className="font-serif text-5xl font-bold tnum mt-2">{country.she_score?.toFixed(1)}</div>
-      <div className="text-sm text-muted-foreground">SHE Score / 100</div>
+      <div className="flex items-baseline gap-2 mt-1">
+        <div className="font-serif text-4xl font-bold tnum">{country.she_score?.toFixed(1)}</div>
+        <div className="text-xs text-muted-foreground">SHE Score / 100</div>
+      </div>
 
       {/* Tier tag + women stats */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         {TIERS[country.tier] && (
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: TIERS[country.tier].color, background: `${TIERS[country.tier].color}1f` }}>
             {TIERS[country.tier].label}
@@ -673,12 +661,12 @@ function SelectedPanel({ country, onClose, global, globalPillars, count }: {
         )}
         <span className="text-xs font-mono px-2 py-1 rounded-md border border-border text-muted-foreground">{country.iso_code}</span>
       </div>
-      <div className="mt-3 rounded-md bg-accent/30 px-3 py-2 text-sm">
+      <div className="mt-2 rounded-md bg-accent/30 px-3 py-1.5 text-xs">
         <div className="flex justify-between"><span className="text-muted-foreground">Women in country</span><span className="font-semibold tnum">{fmtWomenM(country.population_millions)}M</span></div>
         <div className="flex justify-between"><span className="text-muted-foreground">Share of world's women</span><span className="font-semibold tnum">{((womenMexact(country.population_millions) / WORLD_WOMEN_M) * 100).toFixed(2)}%</span></div>
       </div>
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-3 space-y-1.5">
         {PILLARS.map((p) => {
           const raw = (country as unknown as Record<string, number>)[p.field] ?? 0;
           return (
@@ -689,7 +677,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count }: {
           );
         })}
       </div>
-      <Link to={`/scores/${country.iso_code}`} className="mt-4 block text-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-smooth">
+      <Link to={`/scores/${country.iso_code}`} className="mt-3 block text-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-smooth">
         Full country profile →
       </Link>
     </div>
