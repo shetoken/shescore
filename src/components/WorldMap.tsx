@@ -237,7 +237,7 @@ export function WorldMap({
       height={mapHeight}
       style={{ width: "100%", height: "auto" }}
     >
-      <ZoomableGroup zoom={1} minZoom={0.7} maxZoom={8}>
+      <ZoomableGroup zoom={1} minZoom={0.4} maxZoom={8}>
         <Geographies geography={GEO_URL}>
           {({ geographies }) =>
             geographies.map((geo) => {

@@ -14,7 +14,7 @@ import { type ApiVersion } from "@/config/apiVersion";
 import { PILLARS } from "@/theme/pillars";
 import { WorldMap } from "@/components/WorldMap";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Search, ArrowUpDown, Map as MapIcon, Table as TableIcon, ShieldAlert, Clock, ArrowRight, X, AlertTriangle, Sparkles } from "lucide-react";
+import { Search, ArrowUpDown, Map as MapIcon, Table as TableIcon, ShieldAlert, Clock, ArrowRight, X, AlertTriangle, Sparkles, Maximize2 } from "lucide-react";
 
 const C_GOOD = "#5BC289"; // green — high score / leading
 const C_BAD = "#E0606A";  // red — low score / critical
@@ -165,6 +165,7 @@ export default function Scores() {
   const [search, setSearch] = useState("");
   const [asc, setAsc] = useState(false);
   const [view, setView] = useState<"map" | "table">("map"); // map default
+  const [mapPopout, setMapPopout] = useState(false);        // fullscreen map modal
   const [selected, setSelected] = useState<CountryWEI | null>(null);
   const [version, setVersion] = useState<ApiVersion>("v2");
   const [tierBy, setTierBy] = useState<"countries" | "women">("women");
@@ -450,12 +451,24 @@ export default function Scores() {
   // tiles (was an intro line above the headline).
   const sheScoreTile = (
     <div className="rounded-lg border border-border bg-card p-4 flex-1 flex flex-col justify-center">
-      <h3 className="!text-base font-semibold !mb-1.5">The SHE Score</h3>
-      <p className="text-xs text-muted-foreground leading-snug">
-        The published score (v2) is computed from five live pillars — Empowerment (25%), Education &amp; Literacy (20%),
-        Economic Inclusion (20%), Health &amp; Survival (15%) and Safety (Crime Penalty, −20%). Four further pillars are
-        in validation; published annually, quarterly for registered governments.
-      </p>
+      <h3 className="!text-base font-semibold !mb-1.5 flex items-center gap-2">
+        The SHE Score
+        {version === "v3" && <span className="text-[9px] font-bold uppercase tracking-widest text-gold border border-gold/50 rounded px-1 py-0.5">v3 shadow</span>}
+      </h3>
+      {version === "v3" ? (
+        <p className="text-xs text-muted-foreground leading-snug">
+          The <strong className="text-foreground">v3 (shadow)</strong> methodology reweights the five live pillars —
+          Empowerment (20%), Education &amp; Literacy (15%), Economic Inclusion (25%), Health &amp; Survival (15%) and
+          Safety (Crime Penalty, −25%) — so scores shift versus v2. Four further candidate pillars are still gathering
+          data and contribute nothing yet. <strong className="text-foreground">v3 does not affect the published score.</strong>
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground leading-snug">
+          The published score (v2) is computed from five live pillars — Empowerment (25%), Education &amp; Literacy (20%),
+          Economic Inclusion (20%), Health &amp; Survival (15%) and Safety (Crime Penalty, −20%). Four further pillars are
+          in validation; published annually, quarterly for registered governments.
+        </p>
+      )}
     </div>
   );
 
@@ -535,6 +548,12 @@ export default function Scores() {
                 <button onClick={() => setView("map")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${view === "map" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}><MapIcon className="h-4 w-4" /> Map</button>
                 <button onClick={() => setView("table")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 border-l border-border ${view === "table" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}><TableIcon className="h-4 w-4" /> Table</button>
               </div>
+              {view === "map" && (
+                <button onClick={() => setMapPopout(true)} title="Expand the map full-screen"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:border-magenta transition-smooth">
+                  <Maximize2 className="h-4 w-4" /> Expand
+                </button>
+              )}
             </div>
           </div>
 
@@ -622,6 +641,27 @@ export default function Scores() {
           )}
         </section>
       </div>
+
+      {/* Full-screen map popout — more room to see every country in detail */}
+      {mapPopout && (
+        <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm flex flex-col p-4 sm:p-6"
+          onClick={() => setMapPopout(false)}>
+          <div className="flex items-center justify-between mb-3 shrink-0">
+            <div>
+              <h2 className="text-lg !mb-0">World map · {countries.length} countries</h2>
+              <p className="text-xs text-muted-foreground">SHE Score by country{selectedIndex !== "SHE Score" ? ` · shaded by ${selectedIndex}` : ""} · scroll to zoom, drag to pan</p>
+            </div>
+            <button onClick={() => setMapPopout(false)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:border-magenta transition-smooth">
+              <X className="h-4 w-4" /> Close
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 rounded-xl border border-border bg-card p-3 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <WorldMap countries={countries} mapHeight={620} onSelect={(c) => { setSelected(c); }} selectedIso={selected?.iso_code}
+              highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
+              scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
