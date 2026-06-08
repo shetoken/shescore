@@ -444,34 +444,11 @@ export default function Scores() {
                 <div className="flex-1 min-h-0">
                   <WorldMap countries={countries} mapHeight={240} onSelect={setSelected} selectedIso={selected?.iso_code}
                     legendSide="left"
-                    legendTop={selectedDisplay ? (
-                      <div className="pb-2.5 border-b border-border/50 max-w-[130px]">
-                        <div className="text-[11px] font-semibold leading-tight">{selectedDisplay.country}</div>
-                        <div className="leading-none mt-1">
-                          <span className="font-serif text-lg font-bold tnum">{fmtWomenM(selectedDisplay.population_millions)}M</span>
-                          <span className="text-[11px] text-muted-foreground"> women</span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-                          {((womenMexact(selectedDisplay.population_millions) / WORLD_WOMEN_M) * 100).toFixed(2)}% of world's women
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="pb-2.5 border-b border-border/50 max-w-[130px]">
-                        <div className="text-[11px] font-semibold leading-tight">World</div>
-                        <div className="leading-none mt-1">
-                          <span className="font-serif text-lg font-bold tnum">{womenM(totalPop).toLocaleString()}M</span>
-                          <span className="text-[11px] text-muted-foreground"> women</span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-                          across {totalC} scored countries
-                        </div>
-                      </div>
-                    )}
                     highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                     scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
                 </div>
               </div>
-              <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} tier1={tier1} tier4={tier4} />
+              <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} tier1={tier1} tier4={tier4} totalPop={totalPop} />
             </div>
           ) : (
             <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -634,8 +611,8 @@ export default function Scores() {
   );
 }
 
-function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, tier4 }: {
-  country: CountryWEI | null; onClose: () => void; global: number | null; globalPillars: Record<string, number>; count: number; tier1: number; tier4: number;
+function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, tier4, totalPop }: {
+  country: CountryWEI | null; onClose: () => void; global: number | null; globalPillars: Record<string, number>; count: number; tier1: number; tier4: number; totalPop: number;
 }) {
   if (!country) {
     return (
@@ -648,9 +625,10 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
         </div>
         {/* tier summary — mirrors the country panel's tier tag row so the two
             panels (and therefore the map) stay the same height */}
-        <div className="mt-1.5 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: C_GOOD, background: `${C_GOOD}1f` }}>{tier1} Leading</span>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: C_BAD, background: `${C_BAD}1f` }}>{tier4} Critical</span>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_GOOD, background: `${C_GOOD}1f` }}>{tier1} Leading</span>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: C_BAD, background: `${C_BAD}1f` }}>{tier4} Critical</span>
+          <span className="text-xs text-muted-foreground tnum">{womenM(totalPop).toLocaleString()}M women</span>
         </div>
         <div className="mt-3 space-y-1.5">
           {PILLARS.map((p) => {
@@ -673,7 +651,7 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
     <div className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-24">
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-xs text-muted-foreground">{country.region} · Rank #{country.rank}</div>
+          <div className="text-xs text-muted-foreground">{country.region} · Rank #{country.rank} · <span className="font-mono">{country.iso_code}</span></div>
           <div className="font-serif text-lg font-bold">{country.country}</div>
         </div>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
@@ -684,13 +662,13 @@ function SelectedPanel({ country, onClose, global, globalPillars, count, tier1, 
       </div>
 
       {/* Tier tag + women stats */}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
         {TIERS[country.tier] && (
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: TIERS[country.tier].color, background: `${TIERS[country.tier].color}1f` }}>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ color: TIERS[country.tier].color, background: `${TIERS[country.tier].color}1f` }}>
             {TIERS[country.tier].label}
           </span>
         )}
-        <span className="text-xs font-mono px-2 py-1 rounded-md border border-border text-muted-foreground">{country.iso_code}</span>
+        <span className="text-xs text-muted-foreground tnum">{fmtWomenM(country.population_millions)}M women <span className="text-foreground/55">({((womenMexact(country.population_millions) / WORLD_WOMEN_M) * 100).toFixed(2)}%)</span></span>
       </div>
 
       <div className="mt-2 space-y-1">
