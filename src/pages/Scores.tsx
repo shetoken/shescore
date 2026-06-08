@@ -22,45 +22,70 @@ const TIERS: Record<number, { label: string; color: string }> = {
   4: { label: "Tier 4 · Critical", color: "#E0606A" },
 };
 
+type Formula = { label: string; weight?: string };
+
 /* Companion indexes — display-only, reference only, never inputs to the SHE Score.
-   Values are the published global averages; methodology shown on hover. */
-const COMPANION_INDEXES = [
-  { code: "GPI", label: "Gender Poverty Index", value: 57.6, methodology: "Female poverty rates and access to resources, normalised 0–100." },
-  { code: "SVI", label: "Sexual Violence Index", value: 41.0, methodology: "Prevalence of sexual violence and the strength of legal protection." },
-  { code: "WADI", label: "Women & AI Displacement", value: 54.9, methodology: "Exposure of women's work to automation and AI-displacement risk." },
-  { code: "WEVI", label: "Widow Vulnerability", value: 44.9, methodology: "Legal and economic status and protection of widows." },
-  { code: "WHI", label: "Women's Health Index", value: 57.5, methodology: "Maternal, reproductive and mental-health outcomes for women." },
-  { code: "WVI", label: "Women's Voice Index", value: 49.8, methodology: "Political representation and civic freedom for women." },
-  { code: "Compliance", label: "Rights Compliance", value: 47.9, methodology: "Adherence to CEDAW, SDG 5 and women's-rights treaties." },
+   Formula + note shown on hover; values are the published global averages. */
+const COMPANION_INDEXES: { code: string; desc: string; title: string; value: number; formula: Formula[]; note: string }[] = [
+  { code: "GPI", desc: "Gender Poverty", value: 57.6, title: "Gender Poverty Index",
+    formula: [{ label: "Income poverty (F:M)" }, { label: "Wealth gap" }, { label: "Wage gap" }, { label: "Labour participation" }, { label: "Financial inclusion" }, { label: "Food security" }, { label: "Time poverty (unpaid care)" }, { label: "Land ownership" }, { label: "Social protection" }],
+    note: "Measures female economic deprivation relative to men across 9 indicators. Sources: World Bank, ILO, OECD." },
+  { code: "SVI", desc: "Sexual Violence", value: 41.0, title: "Sexual Violence Index",
+    formula: [{ label: "WHO lifetime prevalence" }, { label: "UNODC reported rate" }, { label: "Reporting gap" }, { label: "Marital rape criminalised" }, { label: "Conflict-related SV risk" }, { label: "Digital sexual violence" }, { label: "Legal framework" }, { label: "Support services" }],
+    note: "Higher score = safer. Combines prevalence, legal protection and support services. Sources: WHO, UNODC." },
+  { code: "WADI", desc: "AI Displacement", value: 54.9, title: "Women & AI Displacement Index",
+    formula: [{ label: "Automation exposure" }, { label: "Female sector concentration" }, { label: "Reskilling access" }, { label: "Digital skills gap" }, { label: "AI-policy inclusion" }],
+    note: "Higher score = more resilient. Estimates how exposed women's jobs are to AI automation and the capacity to adapt. Sources: ILO, OECD, WEF." },
+  { code: "WEVI", desc: "Widow Vulnerability", value: 44.9, title: "Widow Vulnerability Index",
+    formula: [{ label: "Inheritance rights" }, { label: "Remarriage freedom" }, { label: "Property rights" }, { label: "Economic support" }, { label: "Social protection" }],
+    note: "Higher score = better protected. Legal and economic status of widows. Sources: UN Women, national law." },
+  { code: "WHI", desc: "Women's Health", value: 57.5, title: "Women's Health Index",
+    formula: [{ label: "Depression prevalence" }, { label: "Suicide rate" }, { label: "Anaemia" }, { label: "Menstrual access" }, { label: "Contraceptive unmet need" }, { label: "Maternal mental-health support" }],
+    note: "Higher score = healthier. Focus on reproductive and mental health. Sources: WHO, UNICEF." },
+  { code: "WVI", desc: "Women's Voice", value: 49.8, title: "Women's Voice Index",
+    formula: [{ label: "Parliamentary seats" }, { label: "Ministerial roles" }, { label: "Local government" }, { label: "Civic participation" }, { label: "Press & protest freedom" }],
+    note: "Higher score = louder voice. Political representation and civic freedom. Sources: IPU, V-Dem." },
+  { code: "Compliance", desc: "Rights Compliance", value: 47.9, title: "Rights Compliance Index",
+    formula: [{ label: "CEDAW ratification" }, { label: "SDG 5 progress" }, { label: "Legal frameworks" }, { label: "Labour conventions" }, { label: "Treaty adherence" }],
+    note: "Higher score = stronger compliance. Adherence to international women's-rights treaties. Sources: UN, ILO." },
 ];
 
-/* SHE Score formula, version-aware (shown on hover over the SHE Score card). */
-const SHE_FORMULA: Record<ApiVersion, { header: string; rows: string[]; note: string }> = {
+/* SHE Score methodology, version-aware (shown on hover over the SHE Score card). */
+const SHE_METHOD: Record<ApiVersion, { title: string; formula: Formula[]; note: string }> = {
   v2: {
-    header: "v2 — OFFICIAL (5 LIVE pillars)",
-    rows: ["Empowerment ×25%", "Education & Literacy ×20%", "Economic Inclusion ×20%", "Health & Survival ×15%", "− Safety (Crime Penalty) ×20%"],
-    note: "The published score. Rounded to one decimal, half-up.",
+    title: "SHE Score (v2 — official)",
+    formula: [{ label: "Empowerment", weight: "×25%" }, { label: "Education & Literacy", weight: "×20%" }, { label: "Economic Inclusion", weight: "×20%" }, { label: "Health & Survival", weight: "×15%" }, { label: "− Safety (Crime Penalty)", weight: "×20%" }],
+    note: "The SHE Score's native index (v2 — official). Five LIVE weighted pillars, normalised 0–100. The 7 cards to the right are companion comparison indexes.",
   },
   v3: {
-    header: "v3 — SHADOW (reweighted)",
-    rows: ["Empowerment ×20%", "Education & Literacy ×15%", "Economic Inclusion ×25%", "Health & Survival ×15%", "− Safety (Crime Penalty) ×25%", "+ 4 candidate pillars · in validation"],
-    note: "Shadow only — does not affect the published score.",
+    title: "SHE Score (v3 — shadow)",
+    formula: [{ label: "Empowerment", weight: "×20% · was 25%" }, { label: "Education & Literacy", weight: "×15% · was 20%" }, { label: "Economic Inclusion", weight: "×25% · was 20%" }, { label: "Health & Survival", weight: "×15% · LIVE" }, { label: "− Safety (Crime Penalty)", weight: "×25% · was 20%" }, { label: "Bodily Autonomy", weight: "TBD · v3" }, { label: "Dignity & Welfare", weight: "TBD · v3" }, { label: "Digital & Social", weight: "TBD · v3" }, { label: "Safety & Justice (expanded)", weight: "TBD · v3" }],
+    note: "v3 SHADOW reweights the five live pillars — heavier Economic Inclusion and Safety (Crime Penalty), lighter Empowerment and Education — so scores shift versus v2. It uses only existing pillar data; nothing is imputed. The four candidate pillars are still gathering data and contribute nothing yet. v3 does not affect the published score.",
   },
 };
 
-function IndexCard({ code, label, value, native, tooltip }: {
-  code: string; label: string; value: string; native?: boolean; tooltip: React.ReactNode;
+function IndexCard({ code, desc, value, native, title, formula, note }: {
+  code: string; desc: string; value: string; native?: boolean; title: string; formula: Formula[]; note: string;
 }) {
   return (
     <div className="relative group">
       <div className={`rounded-lg px-4 py-2.5 cursor-default ${native ? "border-2 border-magenta/50 bg-magenta/10" : "border border-border bg-card"}`}>
         <div className={`text-xs font-bold ${native ? "text-magenta-ink" : ""}`}>{code}</div>
         <div className={`font-serif text-xl font-bold tnum ${native ? "" : "text-foreground/90"}`}>{value}</div>
-        <div className="text-[10px] text-muted-foreground max-w-[130px] leading-tight">{label}</div>
+        <div className="text-[10px] text-muted-foreground max-w-[130px] leading-tight">{desc}</div>
       </div>
-      {/* hover methodology tooltip */}
+      {/* hover methodology tooltip — exact index methodology */}
       <div className="pointer-events-none absolute z-30 hidden group-hover:block bottom-full mb-2 left-0 w-64 rounded-lg border border-border bg-popover p-3 shadow-card text-xs">
-        {tooltip}
+        <p className={`font-bold mb-1.5 ${native ? "text-magenta-ink" : ""}`}>{title}</p>
+        <ul className="space-y-0.5">
+          {formula.map((f) => (
+            <li key={f.label} className="flex justify-between gap-3">
+              <span className="text-foreground/80">{f.label}</span>
+              {f.weight && <span className="font-mono text-muted-foreground shrink-0">{f.weight}</span>}
+            </li>
+          ))}
+        </ul>
+        <p className="text-muted-foreground mt-2 pt-2 border-t border-border">{note}</p>
       </div>
     </div>
   );
@@ -147,29 +172,13 @@ export default function Scores() {
           <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">SHE Score + companion indexes · hover for methodology · comparison only, never inputs</p>
           <div className="flex flex-wrap gap-2">
             <IndexCard
-              code="SHE Score" label="Women's empowerment" native
+              code="SHE Score" desc="Women's Empowerment" native
               value={global != null ? global.toFixed(1) : "—"}
-              tooltip={
-                <div>
-                  <p className="font-bold text-magenta-ink mb-1">{SHE_FORMULA[version].header}</p>
-                  <ul className="space-y-0.5">
-                    {SHE_FORMULA[version].rows.map((r) => <li key={r} className="font-mono text-[11px]">{r}</li>)}
-                  </ul>
-                  <p className="text-muted-foreground mt-1.5">{SHE_FORMULA[version].note}</p>
-                </div>
-              }
+              title={SHE_METHOD[version].title} formula={SHE_METHOD[version].formula} note={SHE_METHOD[version].note}
             />
             {COMPANION_INDEXES.map((idx) => (
-              <IndexCard
-                key={idx.code} code={idx.code} label={idx.label} value={idx.value.toFixed(1)}
-                tooltip={
-                  <div>
-                    <p className="font-bold mb-1">{idx.label}</p>
-                    <p className="text-muted-foreground">{idx.methodology}</p>
-                    <p className="text-muted-foreground/70 mt-1.5">Global average {idx.value.toFixed(1)} · reference only · never an input to the SHE Score.</p>
-                  </div>
-                }
-              />
+              <IndexCard key={idx.code} code={idx.code} desc={idx.desc} value={idx.value.toFixed(1)}
+                title={idx.title} formula={idx.formula} note={idx.note} />
             ))}
           </div>
         </section>
@@ -292,7 +301,7 @@ export default function Scores() {
           <div>
             <h3 className="font-semibold mb-2">Companion indexes</h3>
             <ul className="text-muted-foreground space-y-1">
-              {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.label}</li>)}
+              {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.title}</li>)}
             </ul>
             <p className="text-muted-foreground mt-2 text-xs">Reference only; in development; never inputs to the SHE Score.</p>
           </div>
