@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, ReferenceLine,
+  PieChart, Pie, Cell,
 } from "recharts";
 import { SEO } from "@/lib/seo";
 import { Layout } from "@/components/Layout";
@@ -102,12 +103,15 @@ function IndexCard({ code, desc, value, native, color, badge, title, formula, no
       <TooltipContent side="bottom" align="start" collisionPadding={12} className="w-64 max-w-[88vw] p-3 text-xs">
         <p className="font-bold mb-1.5" style={{ color: accent }}>{title}</p>
         <ul className="space-y-0.5">
-          {formula.map((f) => (
-            <li key={f.label} className="flex justify-between gap-3">
-              <span className="text-foreground/85">{f.label}</span>
-              {f.weight && <span className="font-mono font-semibold shrink-0" style={{ color: accent }}>{f.weight}</span>}
-            </li>
-          ))}
+          {formula.map((f) => {
+            const penalty = /crime penalty/i.test(f.label);
+            return (
+              <li key={f.label} className="flex justify-between gap-3">
+                <span style={penalty ? { color: C_BAD } : undefined} className={penalty ? "font-medium" : "text-foreground/85"}>{f.label}</span>
+                {f.weight && <span className="font-mono font-semibold shrink-0" style={{ color: penalty ? C_BAD : accent }}>{f.weight}</span>}
+              </li>
+            );
+          })}
         </ul>
         <p className="text-muted-foreground mt-2 pt-2 border-t border-border">{note}</p>
       </TooltipContent>
@@ -166,12 +170,20 @@ export default function Scores() {
 
   const global = version === "v3" ? meanScore(countries) : (summary?.global_she_score ?? null);
   const totalC = countries.length;
-  const maxTier = Math.max(1, ...tierData.map((t) => t.count));
   // Version-aware highest/lowest + tier counts for the summary cards.
   const ranked = [...countries].sort((a, b) => b.she_score - a.she_score);
   const highC = ranked[0], lowC = ranked[ranked.length - 1];
   const tier1 = countries.filter((c) => c.tier === 1).length;
   const tier4 = countries.filter((c) => c.tier === 4).length;
+
+  // Default the selected country to Iceland once data loads.
+  useEffect(() => {
+    if (!selected && rawCountries.length) {
+      setSelected(rawCountries.find((c) => c.iso_code === "ISL") ?? rawCountries[0]);
+    }
+  }, [rawCountries, selected]);
+  // Re-resolve the selected country against the versioned list (score is version-aware).
+  const selectedDisplay = selected ? (countries.find((c) => c.iso_code === selected.iso_code) ?? selected) : null;
 
   return (
     <Layout>
@@ -275,7 +287,7 @@ export default function Scores() {
           ) : view === "map" ? (
             <div className="grid lg:grid-cols-[1fr_300px] gap-4 items-start">
               <WorldMap countries={countries} mapHeight={460} onSelect={setSelected} selectedIso={selected?.iso_code} />
-              <SelectedPanel country={selected} onClose={() => setSelected(null)} />
+              <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} />
             </div>
           ) : (
             <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -318,7 +330,7 @@ export default function Scores() {
                 <h3 className="text-base font-semibold">Score distributions — {totalC} countries</h3>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   Each curve is one of the {1 + COMPANION_INDEXES.length} indexes — separate scoring systems, not SHE Score sub-pillars.
-                  {selected && <> Dashed line = {selected.country} ({selected.she_score?.toFixed(1)}).</>}
+                  {selectedDisplay && <> Dashed line = {selectedDisplay.country} ({selectedDisplay.she_score?.toFixed(1)}).</>}
                 </p>
               </div>
               <span className="text-xs text-muted-foreground shrink-0">peak = most countries</span>
@@ -328,9 +340,9 @@ export default function Scores() {
                 <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}>
                   <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis hide domain={[0, 112]} />
-                  {selected && (
-                    <ReferenceLine x={selected.she_score} stroke="#E0B84E" strokeDasharray="4 3"
-                      label={{ value: selected.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
+                  {selectedDisplay && (
+                    <ReferenceLine x={selectedDisplay.she_score} stroke="#E0B84E" strokeDasharray="4 3"
+                      label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
                   )}
                   <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={2.5} dot={false} isAnimationActive={false} />
                   {COMPANION_INDEXES.map((idx) => (
@@ -347,7 +359,7 @@ export default function Scores() {
             <p className="source-line">SHE Score curve from live/baseline data; companion curves are illustrative placeholders until live data.</p>
           </div>
 
-          {/* Tier distribution bars */}
+          {/* Tier distribution donut */}
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -356,28 +368,36 @@ export default function Scores() {
               </div>
               <span className="text-xs text-muted-foreground shrink-0">{totalC} countries</span>
             </div>
-            <div className="mt-5 space-y-4">
-              {tierData.map((t) => {
-                const pct = totalC ? (t.count / totalC) * 100 : 0;
-                const w = (t.count / maxTier) * 100;
-                return (
-                  <div key={t.name}>
-                    <div className="flex items-baseline justify-between text-sm mb-1.5">
-                      <span className="font-medium">{t.name}</span>
-                      <span className="tnum"><span className="font-bold" style={{ color: t.color }}>{t.count}</span> <span className="text-muted-foreground">({pct.toFixed(1)}%)</span></span>
+            <div className="mt-3 grid grid-cols-[150px_1fr] gap-4 items-center">
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={170}>
+                  <PieChart>
+                    <Pie data={tierData} dataKey="count" nameKey="name" innerRadius={48} outerRadius={76} paddingAngle={2} stroke="none" isAnimationActive={false}>
+                      {tierData.map((d) => <Cell key={d.name} fill={d.color} />)}
+                    </Pie>
+                    <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} formatter={(v: number, n: string) => [`${v} (${totalC ? ((v / totalC) * 100).toFixed(1) : 0}%)`, n]} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <div className="font-serif text-2xl font-bold tnum leading-none">{totalC}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">countries</div>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                {tierData.map((t) => {
+                  const pct = totalC ? (t.count / totalC) * 100 : 0;
+                  return (
+                    <div key={t.name} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: t.color }} />{t.name}</span>
+                      <span className="tnum shrink-0"><span className="font-bold" style={{ color: t.color }}>{t.count}</span> <span className="text-muted-foreground">({pct.toFixed(1)}%)</span></span>
                     </div>
-                    <div className="h-5 rounded-md bg-border/30 overflow-hidden">
-                      <div className="h-full rounded-md transition-all" style={{ width: `${w}%`, background: t.color }} />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-4 text-xs text-muted-foreground">
-              {tierData.map((t) => (
-                <span key={t.name} className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: t.color }} />{t.name.split(" · ")[1]}</span>
-              ))}
-            </div>
+            <Link to="/compare" className="mt-4 inline-flex items-center gap-1 text-sm text-magenta-ink hover:underline">
+              Compare countries side-by-side <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </section>
 

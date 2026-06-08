@@ -10,6 +10,7 @@ import Methodology from "./pages/Methodology";
 import Scores from "./pages/Scores";
 import CountryProfile from "./pages/CountryProfile";
 import Explorer from "./pages/Explorer";
+import Compare from "./pages/Compare";
 import About from "./pages/About";
 import Governance from "./pages/Governance";
 import Privacy from "./pages/Privacy";
@@ -23,7 +24,7 @@ import Lab from "./pages/Lab";
 
 import type { ComponentType } from "react";
 const PAGE_COMPONENTS: Record<string, ComponentType> = {
-  Home, Methodology, Scores, Explorer, About, Governance, Privacy, Data, Register, Landscape, Lab,
+  Home, Methodology, Scores, Explorer, About, Governance, Privacy, Data, Register, Landscape, Lab, Compare,
 };
 
 const queryClient = new QueryClient({

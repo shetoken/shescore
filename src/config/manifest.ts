@@ -42,6 +42,12 @@ export const PAGES: PageMeta[] = [
     priority: "0.9", changefreq: "weekly",
   },
   {
+    path: "/compare", key: "Compare", nav: false,
+    title: "Compare Countries — SHE Score Side by Side | SHE Score",
+    description: "Compare up to three countries side by side across the SHE Score and its five pillars.",
+    priority: "0.6", changefreq: "weekly",
+  },
+  {
     path: "/methodology", key: "Methodology", nav: true, navLabel: "Methodology",
     title: "Methodology — How the SHE Score Is Built | SHE Score",
     description:
