@@ -436,7 +436,7 @@ export default function Scores() {
                   </div>
                 ) : null}
                 <div className="flex-1 min-h-0">
-                  <WorldMap countries={countries} mapHeight={240} onSelect={setSelected} selectedIso={selected?.iso_code}
+                  <WorldMap countries={countries} mapHeight={330} onSelect={setSelected} selectedIso={selected?.iso_code}
                     legendSide="left"
                     mapHeader={<MetricsStrip stats={[
                       { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },

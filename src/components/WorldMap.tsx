@@ -346,7 +346,7 @@ export function WorldMap({
         {legendSide === "left" ? (
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             {mapHeader}
-            <div className="flex-1 rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] flex items-start justify-center">
+            <div className="flex-1 rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] flex items-center justify-center">
               {mapCanvas}
             </div>
           </div>
