@@ -144,10 +144,9 @@ function IndexCard({ code, desc, value, native, color, badge, title, formula, no
 /* Headline metrics — one-line strip above the map. */
 function MetricsStrip({ stats }: { stats: { label: string; value: string; color?: string }[] }) {
   return (
-    <div className="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-card px-3.5 py-1.5 text-xs">
-      {stats.map((s, i) => (
+    <div className="shrink-0 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-border bg-card px-4 py-1.5 text-xs">
+      {stats.map((s) => (
         <span key={s.label} className="inline-flex items-baseline gap-1.5">
-          {i > 0 && <span className="text-muted-foreground/40 mr-1.5">·</span>}
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
           <span className="font-semibold tnum" style={s.color ? { color: s.color } : undefined}>{s.value}</span>
         </span>
@@ -378,7 +377,7 @@ export default function Scores() {
               ? <>showing <span className="text-foreground font-medium normal-case">{selectedDisplay.country}</span>'s scores · <button onClick={() => setSelected(null)} className="text-magenta-ink hover:underline normal-case">global averages</button></>
               : "global averages · select a country to see its scores"} · click to filter · hover for methodology
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1.5">
             <IndexCard
               code="SHE Score" desc="Women's Empowerment" native badge="NATIVE" color={INDEX_COLORS["SHE Score"]}
               value={selectedDisplay ? (selectedDisplay.she_score?.toFixed(1) ?? "—") : (global != null ? global.toFixed(1) : "—")}
