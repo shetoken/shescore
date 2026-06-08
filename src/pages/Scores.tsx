@@ -161,6 +161,7 @@ export default function Scores() {
   const [selectedIndex, setSelectedIndex] = useState<string>("SHE Score");
   const [hoverScore, setHoverScore] = useState<number | null>(null);
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
+  const [hoverTier, setHoverTier] = useState<number | null>(null);
 
   const { data: summary } = useQuery({ queryKey: ["summary"], queryFn: api.summary, staleTime: 5 * 60 * 1000 });
   const { data, isLoading, isError } = useQuery({ queryKey: ["scores-countries"], queryFn: () => api.wei.countries(250), staleTime: 5 * 60 * 1000 });
@@ -218,21 +219,23 @@ export default function Scores() {
 
   // Cross-highlight: countries within ±2.5 of the hovered SHE Score → brighten on the map.
   const countriesNear = (score: number) => countries.filter((c) => Math.abs((c.she_score ?? 0) - score) <= 2.5);
-  // Countries to brighten on the map: hovered-score neighbours (transient), else the
-  // clicked donut tier (sticky).
+  // The active tier: hovering a donut slice (transient) wins over a clicked one (sticky).
+  const activeTier = hoverTier ?? selectedTier;
+  // Countries to brighten on the map: hovered-score neighbours (KDE/map hover), else
+  // the active donut tier.
   const highlightIsos = useMemo(() => {
     if (hoverScore != null) return new Set(countriesNear(hoverScore).map((c) => c.iso_code));
-    if (selectedTier != null) return new Set(countries.filter((c) => c.tier === selectedTier).map((c) => c.iso_code));
+    if (activeTier != null) return new Set(countries.filter((c) => c.tier === activeTier).map((c) => c.iso_code));
     return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hoverScore, selectedTier, countries]);
-  // Donut slices to light up: tiers of hovered countries (transient), else the clicked tier.
+  }, [hoverScore, activeTier, countries]);
+  // Donut slices to light up: tiers of hovered countries, else the active tier.
   const litTiers = useMemo(() => {
     if (hoverScore != null) return new Set(countriesNear(hoverScore).map((c) => c.tier));
-    if (selectedTier != null) return new Set([selectedTier]);
+    if (activeTier != null) return new Set([activeTier]);
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hoverScore, selectedTier, countries]);
+  }, [hoverScore, activeTier, countries]);
   // When a companion index is selected, shade the map by its (placeholder) per-country score.
   const companionOverride = useMemo(() => {
     if (selectedIndex === "SHE Score") return undefined;
@@ -255,8 +258,9 @@ export default function Scores() {
     const anchor = x > cx ? "start" : "end";
     return (
       <text x={x} y={y} fill={t.color} textAnchor={anchor} dominantBaseline="central">
-        <tspan x={x} dy="-0.55em" fontSize={12} fontWeight={700}>{short}</tspan>
-        <tspan x={x} dy="1.2em" fontSize={12} fontWeight={600}>{(percent * 100).toFixed(1)}%</tspan>
+        <tspan x={x} dy="-1.05em" fontSize={12} fontWeight={700}>{short}</tspan>
+        <tspan x={x} dy="1.15em" fontSize={12} fontWeight={600}>{(percent * 100).toFixed(1)}%</tspan>
+        <tspan x={x} dy="1.1em" fontSize={10} fontWeight={400} fill="hsl(var(--muted-foreground))">{womenM(t.pop).toLocaleString()}M women</tspan>
       </text>
     );
   };
@@ -550,6 +554,7 @@ export default function Scores() {
                   <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
                     innerRadius={58} outerRadius={88} paddingAngle={2} stroke="none" isAnimationActive={false}
                     label={sliceLabel} labelLine={leaderLine} cursor="pointer"
+                    onMouseEnter={(_, i) => setHoverTier(i + 1)} onMouseLeave={() => setHoverTier(null)}
                     onClick={(_, i) => setSelectedTier((t) => (t === i + 1 ? null : i + 1))}>
                     {tierData.map((d, i) => {
                       const tier = i + 1;
@@ -557,7 +562,6 @@ export default function Scores() {
                       return <Cell key={d.name} fill={d.color} fillOpacity={litTiers && !lit ? 0.22 : 1} stroke={lit ? "#ffffff" : "none"} strokeWidth={lit ? 2 : 0} />;
                     })}
                   </Pie>
-                  <RTooltip content={donutTooltip} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
