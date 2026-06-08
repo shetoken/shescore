@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { CountryWEI } from "@/lib/api";
 
-// world-atlas@2 via npm CDN — uses ISO 3166-1 numeric feature IDs
-const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+// world-atlas@2, self-hosted (same-origin) so the map loads even where CDNs are
+// blocked. Base-path aware for GitHub Pages project sites. ISO 3166-1 numeric IDs.
+const GEO_URL = `${import.meta.env.BASE_URL}data/countries-110m.json`;
 
 // ISO 3166-1 numeric → alpha-3 lookup (matches world-atlas feature ids to our API's iso_code)
 const NUM_TO_ISO3: Record<string, string> = {

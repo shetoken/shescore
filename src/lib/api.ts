@@ -3,9 +3,15 @@
 // committed same-origin baseline dataset (public/data/fallback-countries.json),
 // so the site renders real numbers regardless. Kept off any token-branded host
 // so the served bundle stays clean for content-inspecting firewalls.
-const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) || 'https://api.shescore.org';
+// Only call a live API when one is explicitly configured (VITE_API_BASE). With no
+// API set, we skip the network entirely and use the committed same-origin baseline
+// dataset — so there are no failed cross-origin requests / console errors, and the
+// site works in locked-down networks.
+const API_CONFIGURED = !!(import.meta.env.VITE_API_BASE as string | undefined);
+const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) || '';
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!API_CONFIGURED) throw new Error("no API configured — using baseline dataset");
   const res = await fetch(`${API_BASE}${path}`, init);
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
   return res.json();
@@ -31,7 +37,7 @@ const normSummary = (s: any): Summary => ({ ...s, global_she_score: s.global_she
 let _fallbackCache: { countries: any[]; summary: any } | null = null;
 async function loadFallback() {
   if (_fallbackCache) return _fallbackCache;
-  const res = await fetch("/data/fallback-countries.json");
+  const res = await fetch(`${import.meta.env.BASE_URL}data/fallback-countries.json`);
   if (!res.ok) throw new Error("no fallback data");
   _fallbackCache = await res.json();
   return _fallbackCache!;
