@@ -111,14 +111,14 @@ function IndexCard({ code, desc, value, native, color, badge, title, formula, no
   return (
     <Tooltip delayDuration={100}>
       <TooltipTrigger asChild>
-        <div onClick={onClick} className="rounded-lg px-3 py-1.5 cursor-pointer border-2 transition-smooth"
+        <div onClick={onClick} className="rounded-lg px-3 py-3 cursor-pointer border-2 transition-smooth"
           style={{ borderColor: selected ? accent : (native ? accent : `${color}55`), background: `${accent}${selected ? "26" : "14"}`, boxShadow: selected ? `0 0 0 2px ${accent}` : undefined }}>
           <div className="flex items-center justify-between gap-1.5">
             <div className="text-[11px] font-bold" style={{ color: accent }}>{code}</div>
             {badge && <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground border border-border rounded px-1">{badge}</span>}
           </div>
-          <div className="font-serif text-lg font-bold tnum leading-tight" style={{ color: accent }}>{value}</div>
-          <div className="text-[10px] text-muted-foreground max-w-[120px] leading-tight">{desc}</div>
+          <div className="font-serif text-lg font-bold tnum leading-tight mt-0.5" style={{ color: accent }}>{value}</div>
+          <div className="text-[10px] text-muted-foreground max-w-[120px] leading-tight mt-0.5">{desc}</div>
         </div>
       </TooltipTrigger>
       {/* Radix tooltip auto-flips/clamps to stay in the viewport (no clipping). */}
@@ -454,7 +454,7 @@ export default function Scores() {
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
 
-      <div className="container max-w-7xl py-2 space-y-1.5">
+      <div className="container max-w-7xl py-3 space-y-2.5">
         {/* Header — single compact bar */}
         <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="flex items-baseline gap-3 flex-wrap">
