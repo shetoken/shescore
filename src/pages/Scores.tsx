@@ -456,7 +456,18 @@ export default function Scores() {
                           {((womenMexact(selectedDisplay.population_millions) / WORLD_WOMEN_M) * 100).toFixed(2)}% of world's women
                         </div>
                       </div>
-                    ) : undefined}
+                    ) : (
+                      <div className="pb-2.5 border-b border-border/50 max-w-[130px]">
+                        <div className="text-[11px] font-semibold leading-tight">World</div>
+                        <div className="leading-none mt-1">
+                          <span className="font-serif text-lg font-bold tnum">{womenM(totalPop).toLocaleString()}M</span>
+                          <span className="text-[11px] text-muted-foreground"> women</span>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                          across {totalC} scored countries
+                        </div>
+                      </div>
+                    )}
                     highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                     scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
                 </div>
