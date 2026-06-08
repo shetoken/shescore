@@ -332,6 +332,110 @@ export default function Scores() {
     );
   };
 
+  // KDE distribution card (placed in the left column under the map).
+  const kdeCard = (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">Score distributions · {totalC} countries
+          {selectedDisplay && <span className="font-normal text-muted-foreground"> · {selectedDisplay.iso_code} {selectedDisplay.she_score?.toFixed(1)}</span>}
+        </h3>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2 py-0.5" style={{ color: INDEX_COLORS[selectedIndex], borderColor: `${INDEX_COLORS[selectedIndex]}66` }}>
+            <span className="h-2 w-2 rounded-full" style={{ background: INDEX_COLORS[selectedIndex] }} /> {selectedIndex}
+          </span>
+          {selectedIndex !== "SHE Score" && (
+            <button onClick={() => setSelectedIndex("SHE Score")} className="text-xs text-muted-foreground hover:text-foreground">Reset</button>
+          )}
+        </div>
+      </div>
+      <div className="mt-2">
+        <ResponsiveContainer width="100%" height={188}>
+          <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}
+            onMouseMove={(s) => setHoverScore(typeof s?.activeLabel === "number" ? s.activeLabel : null)}
+            onMouseLeave={() => setHoverScore(null)}>
+            <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+            <YAxis hide domain={[0, 112]} />
+            <RTooltip cursor={{ stroke: "#E0B84E", strokeWidth: 1.5, strokeDasharray: "4 3" }} content={kdeTooltip} />
+            {selectedDisplay && (
+              <ReferenceLine x={selectedDisplay.she_score} stroke="#E0B84E" strokeDasharray="4 3"
+                label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
+            )}
+            {hoverScore != null && (
+              <ReferenceLine x={hoverScore} stroke="#E24D88" strokeWidth={1.5} strokeDasharray="3 3" />
+            )}
+            <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.18} dot={false} isAnimationActive={false} />
+            {COMPANION_INDEXES.map((idx) => (
+              <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.18} dot={false} isAnimationActive={false} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 mt-1.5 text-[11px] text-muted-foreground">
+        {["SHE Score", ...COMPANION_INDEXES.map((i) => i.code)].map((code) => (
+          <span key={code} className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded-full" style={{ background: INDEX_COLORS[code] }} />{code}</span>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Tier distribution donut card.
+  const donutCard = (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h3 className="text-sm font-semibold">Distribution by tier</h3>
+        <div className="inline-flex rounded-md border border-border overflow-hidden text-[11px]">
+          <button onClick={() => setTierBy("countries")} className={`px-2 py-1 ${tierBy === "countries" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>Countries</button>
+          <button onClick={() => setTierBy("women")} className={`px-2 py-1 border-l border-border ${tierBy === "women" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>Women</button>
+        </div>
+      </div>
+      <div className="relative mt-1">
+        <ResponsiveContainer width="100%" height={196}>
+          <PieChart margin={{ top: 4, bottom: 4, left: 24, right: 24 }}>
+            <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
+              innerRadius={42} outerRadius={62} paddingAngle={2} stroke="none" isAnimationActive={false}
+              label={sliceLabel} labelLine={leaderLine} cursor="pointer"
+              onMouseEnter={(_, i) => setHoverTier(i + 1)} onMouseLeave={() => setHoverTier(null)}
+              onClick={(_, i) => setSelectedTier((t) => (t === i + 1 ? null : i + 1))}>
+              {tierData.map((d, i) => {
+                const tier = i + 1;
+                const lit = litTiers?.has(tier);
+                return <Cell key={d.name} fill={d.color} fillOpacity={litTiers && !lit ? 0.22 : 1} stroke={lit ? "#ffffff" : "none"} strokeWidth={lit ? 2 : 0} />;
+              })}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+          {tierBy === "women" ? (
+            <><div className="font-serif text-xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[9px] uppercase tracking-wider text-muted-foreground">women</div></>
+          ) : (
+            <><div className="font-serif text-2xl font-bold tnum leading-none">{totalC}</div><div className="text-[9px] uppercase tracking-wider text-muted-foreground">countries</div></>
+          )}
+        </div>
+      </div>
+      <Link to="/compare" className="mt-1 inline-flex items-center gap-1 text-xs text-magenta-ink hover:underline">
+        Compare countries <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    </div>
+  );
+
+  // Explore tiles (placed in the right column under the panel).
+  const exploreTiles = (
+    <>
+      <Link to="/safety" className="group rounded-lg border border-border bg-card p-3 hover:border-magenta transition-smooth flex flex-col">
+        <ShieldAlert className="h-5 w-5 text-magenta-ink" />
+        <div className="mt-1.5 font-serif text-base font-semibold leading-tight">Women's safety map</div>
+        <p className="mt-0.5 text-xs text-muted-foreground leading-snug">Travel-advisory view by the Safety pillar, country &amp; state-level.</p>
+        <span className="mt-2 inline-flex items-center gap-1 text-xs text-magenta-ink">Open the safety map <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
+      </Link>
+      <Link to="/clock" className="group rounded-lg border border-border bg-card p-3 hover:border-magenta transition-smooth flex flex-col">
+        <Clock className="h-5 w-5 text-magenta-ink" />
+        <div className="mt-1.5 font-serif text-base font-semibold leading-tight">A day in the life</div>
+        <p className="mt-0.5 text-xs text-muted-foreground leading-snug">What the numbers mean for 100 girls in a single day.</p>
+        <span className="mt-2 inline-flex items-center gap-1 text-xs text-magenta-ink">Open the figures <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
+      </Link>
+    </>
+  );
+
   return (
     <Layout>
       <SEO title={meta.title} description={meta.description} url={`${SITE.origin}/scores`} />
@@ -425,8 +529,10 @@ export default function Scores() {
               <p className="mt-1 text-sm text-muted-foreground">The methodology and baseline data remain on the <Link to="/data" className="text-magenta-ink hover:underline">data page</Link>.</p>
             </div>
           ) : view === "map" ? (
-            <div className="grid lg:grid-cols-[1fr_320px] gap-4 items-stretch">
-              <div className="flex flex-col min-h-0">
+            <div className="grid lg:grid-cols-[1fr_320px] gap-4 items-start">
+              {/* LEFT: map + KDE/donut charts stacked under it */}
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col">
                 {selectedIndex !== "SHE Score" && (
                   <div className="mb-2 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
                     Map shaded by <span className="font-medium" style={{ color: INDEX_COLORS[selectedIndex] }}>{selectedIndex}</span> — hover a country for its {selectedIndex} score.
@@ -440,8 +546,8 @@ export default function Scores() {
                     <button onClick={() => setSelectedTier(null)} className="hover:underline text-muted-foreground">Clear</button>
                   </div>
                 ) : null}
-                <div className="flex-1 min-h-0">
-                  <WorldMap countries={countries} mapHeight={311} onSelect={setSelected} selectedIso={selected?.iso_code}
+                <div>
+                  <WorldMap countries={countries} mapHeight={250} onSelect={setSelected} selectedIso={selected?.iso_code}
                     legendSide="left"
                     mapHeader={<MetricsStrip stats={[
                       { label: "Highest", value: highC ? `${highC.country} ${highC.she_score.toFixed(1)}` : "—", color: C_GOOD },
@@ -452,10 +558,17 @@ export default function Scores() {
                     highlightIsos={highlightIsos} onHover={(c) => setHoverScore(c ? (c.she_score ?? null) : null)}
                     scoreOverride={companionOverride} indexLabel={selectedIndex !== "SHE Score" ? selectedIndex : "SHE Score"} />
                 </div>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">{kdeCard}{donutCard}</div>
               </div>
-              <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} tier1={tier1} tier4={tier4} totalPop={totalPop} />
+              {/* RIGHT: country panel + explore tiles */}
+              <div className="flex flex-col gap-3">
+                <SelectedPanel country={selectedDisplay} onClose={() => setSelected(null)} global={global} globalPillars={globalPillars} count={totalC} tier1={tier1} tier4={tier4} totalPop={totalPop} />
+                {exploreTiles}
+              </div>
             </div>
           ) : (
+            <>
             <div className="rounded-lg border border-border bg-card overflow-hidden">
               <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead className="text-muted-foreground border-b border-border"><tr>
@@ -483,116 +596,16 @@ export default function Scores() {
                 </tbody>
               </table></div>
             </div>
+            <div className="mt-3 grid sm:grid-cols-2 gap-3">{kdeCard}{donutCard}</div>
+            <div className="mt-3 grid sm:grid-cols-2 gap-3">{exploreTiles}</div>
+            </>
           )}
         </section>
 
-        {/* Charts + Explore — three tiles in one row */}
-        <section className="grid lg:grid-cols-[1.15fr_1fr_0.8fr] gap-3 items-stretch">
-          {/* KDE distributions */}
-          <div className="rounded-lg border border-border bg-card p-3 flex flex-col">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold">Score distributions · {totalC} countries
-                {selectedDisplay && <span className="font-normal text-muted-foreground"> · {selectedDisplay.iso_code} {selectedDisplay.she_score?.toFixed(1)}</span>}
-              </h3>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2 py-0.5" style={{ color: INDEX_COLORS[selectedIndex], borderColor: `${INDEX_COLORS[selectedIndex]}66` }}>
-                  <span className="h-2 w-2 rounded-full" style={{ background: INDEX_COLORS[selectedIndex] }} /> {selectedIndex}
-                </span>
-                {selectedIndex !== "SHE Score" && (
-                  <button onClick={() => setSelectedIndex("SHE Score")} className="text-xs text-muted-foreground hover:text-foreground">Reset</button>
-                )}
-              </div>
-            </div>
-            <div className="mt-2">
-              <ResponsiveContainer width="100%" height={188}>
-                <LineChart data={distData} margin={{ left: -22, right: 22, top: 24, bottom: 0 }}
-                  onMouseMove={(s) => setHoverScore(typeof s?.activeLabel === "number" ? s.activeLabel : null)}
-                  onMouseLeave={() => setHoverScore(null)}>
-                  <XAxis dataKey="x" type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <YAxis hide domain={[0, 112]} />
-                  <RTooltip cursor={{ stroke: "#E0B84E", strokeWidth: 1.5, strokeDasharray: "4 3" }} content={kdeTooltip} />
-                  {selectedDisplay && (
-                    <ReferenceLine x={selectedDisplay.she_score} stroke="#E0B84E" strokeDasharray="4 3"
-                      label={{ value: selectedDisplay.iso_code, fill: "#E0B84E", fontSize: 11, fontWeight: 700, position: "insideTop", offset: -16 }} />
-                  )}
-                  {hoverScore != null && (
-                    <ReferenceLine x={hoverScore} stroke="#E24D88" strokeWidth={1.5} strokeDasharray="3 3" />
-                  )}
-                  <Line dataKey="SHE Score" type="monotone" stroke={INDEX_COLORS["SHE Score"]} strokeWidth={emph("SHE Score") ? 3.5 : 1.5} opacity={emph("SHE Score") ? 1 : 0.18} dot={false} isAnimationActive={false} />
-                  {COMPANION_INDEXES.map((idx) => (
-                    <Line key={idx.code} dataKey={idx.code} type="monotone" stroke={INDEX_COLORS[idx.code]} strokeWidth={emph(idx.code) ? 3.5 : 1.5} opacity={emph(idx.code) ? 1 : 0.18} dot={false} isAnimationActive={false} />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 mt-1.5 text-[11px] text-muted-foreground">
-              {["SHE Score", ...COMPANION_INDEXES.map((i) => i.code)].map((code) => (
-                <span key={code} className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded-full" style={{ background: INDEX_COLORS[code] }} />{code}</span>
-              ))}
-            </div>
-          </div>
 
-          {/* Tier distribution donut */}
-          <div className="rounded-lg border border-border bg-card p-3 flex flex-col">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold">Distribution by tier</h3>
-              <div className="inline-flex rounded-md border border-border overflow-hidden text-[11px]">
-                <button onClick={() => setTierBy("countries")} className={`px-2 py-1 ${tierBy === "countries" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>Countries</button>
-                <button onClick={() => setTierBy("women")} className={`px-2 py-1 border-l border-border ${tierBy === "women" ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"}`}>Women</button>
-              </div>
-            </div>
-            {/* Big donut with on-slice % data labels + leader lines */}
-            <div className="relative mt-1 flex-1">
-              <ResponsiveContainer width="100%" height={196}>
-                <PieChart margin={{ top: 4, bottom: 4, left: 24, right: 24 }}>
-                  <Pie data={tierData} dataKey={tierBy === "women" ? "pop" : "count"} nameKey="name" cx="50%" cy="50%"
-                    innerRadius={42} outerRadius={62} paddingAngle={2} stroke="none" isAnimationActive={false}
-                    label={sliceLabel} labelLine={leaderLine} cursor="pointer"
-                    onMouseEnter={(_, i) => setHoverTier(i + 1)} onMouseLeave={() => setHoverTier(null)}
-                    onClick={(_, i) => setSelectedTier((t) => (t === i + 1 ? null : i + 1))}>
-                    {tierData.map((d, i) => {
-                      const tier = i + 1;
-                      const lit = litTiers?.has(tier);
-                      return <Cell key={d.name} fill={d.color} fillOpacity={litTiers && !lit ? 0.22 : 1} stroke={lit ? "#ffffff" : "none"} strokeWidth={lit ? 2 : 0} />;
-                    })}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                {tierBy === "women" ? (
-                  <><div className="font-serif text-xl font-bold tnum leading-none">{womenM(totalPop).toLocaleString()}M</div><div className="text-[9px] uppercase tracking-wider text-muted-foreground">women</div></>
-                ) : (
-                  <><div className="font-serif text-2xl font-bold tnum leading-none">{totalC}</div><div className="text-[9px] uppercase tracking-wider text-muted-foreground">countries</div></>
-                )}
-              </div>
-            </div>
-
-            <Link to="/compare" className="mt-1 inline-flex items-center gap-1 text-xs text-magenta-ink hover:underline">
-              Compare countries <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          {/* Explore the data — two stacked tiles in the same row */}
-          <div className="flex flex-col gap-3 h-full">
-            <Link to="/safety" className="group flex-1 rounded-lg border border-border bg-card p-3 hover:border-magenta transition-smooth flex flex-col">
-              <ShieldAlert className="h-5 w-5 text-magenta-ink" />
-              <div className="mt-1.5 font-serif text-base font-semibold leading-tight">Women's safety map</div>
-              <p className="mt-0.5 text-xs text-muted-foreground leading-snug">Travel-advisory view by the Safety pillar, country &amp; state-level.</p>
-              <span className="mt-auto pt-1.5 inline-flex items-center gap-1 text-xs text-magenta-ink">Open the safety map <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
-            </Link>
-            <Link to="/clock" className="group flex-1 rounded-lg border border-border bg-card p-3 hover:border-magenta transition-smooth flex flex-col">
-              <Clock className="h-5 w-5 text-magenta-ink" />
-              <div className="mt-1.5 font-serif text-base font-semibold leading-tight">A day in the life</div>
-              <p className="mt-0.5 text-xs text-muted-foreground leading-snug">What the numbers mean for 100 girls in a single day.</p>
-              <span className="mt-auto pt-1.5 inline-flex items-center gap-1 text-xs text-magenta-ink">Open the figures <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" /></span>
-            </Link>
-          </div>
-        </section>
-
-        {/* Reference — Companion indexes + Sources, spanning the KDE + donut width */}
-        <section className="grid lg:grid-cols-[1.15fr_1fr_0.8fr] gap-3">
-          <div className="lg:col-span-2 rounded-lg border border-border bg-card p-4 grid sm:grid-cols-2 gap-6 text-sm">
-            <div>
+        {/* Reference — Companion indexes + Sources & methodology */}
+        <section className="rounded-lg border border-border bg-card p-4 grid sm:grid-cols-2 gap-6 text-sm">
+          <div>
               <h3 className="font-semibold mb-2">Companion indexes</h3>
               <ul className="text-muted-foreground space-y-1">
                 {COMPANION_INDEXES.map((idx) => <li key={idx.code}><span className="text-foreground/80 font-medium">{idx.code}</span> — {idx.title}</li>)}
@@ -604,7 +617,6 @@ export default function Scores() {
               <p className="text-muted-foreground">Built from UN Women, World Bank, WHO, UNODC, UNESCO and ILO data. All scores normalised 0–100; higher is better for women. Scores are indicative and for research and awareness.</p>
               <Link to="/methodology" className="text-magenta-ink hover:underline mt-1 inline-block">Read the methodology →</Link>
             </div>
-          </div>
         </section>
       </div>
     </Layout>

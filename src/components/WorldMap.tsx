@@ -286,7 +286,7 @@ export function WorldMap({
   );
 
   return (
-    <div className={`relative w-full select-none ${legendSide === "left" ? "h-full flex flex-col" : ""}`}>
+    <div className="relative w-full select-none">
       {/* Floating tooltip */}
       {tooltip && (
         <div
@@ -332,7 +332,7 @@ export function WorldMap({
       )}
 
       {/* Map canvas (+ optional left-stacked legend in the same row) */}
-      <div className={legendSide === "left" ? "flex items-stretch gap-4 flex-1 min-h-0" : ""}>
+      <div className={legendSide === "left" ? "flex items-start gap-4" : ""}>
         {legendSide === "left" && (
           <div className="flex flex-col gap-2.5 shrink-0 self-start max-w-[130px]">
             {legendTop}
@@ -346,7 +346,7 @@ export function WorldMap({
         {legendSide === "left" ? (
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             {mapHeader}
-            <div className="flex-1 rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a] flex items-center justify-center">
+            <div className="rounded-2xl overflow-hidden border border-border/30 bg-[#0f172a]">
               {mapCanvas}
             </div>
           </div>
