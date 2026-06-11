@@ -45,6 +45,18 @@ async function loadFallback() {
 function markFallback() { try { (window as any).__sheApiFallback = true; } catch { /* ssr */ } }
 export function isApiFallback() { try { return !!(window as any).__sheApiFallback; } catch { return false; } }
 
+/* Committed sub-national (state/province) scores, used by the safety map when
+   the scoring API is unavailable. Keyed by lowercase country name. */
+let _statesCache: Record<string, StateScore[]> | null = null;
+async function loadStatesFallback(): Promise<Record<string, StateScore[]>> {
+  if (_statesCache) return _statesCache;
+  const res = await fetch(`${import.meta.env.BASE_URL}data/states.json`);
+  if (!res.ok) throw new Error("no states data");
+  const j = await res.json();
+  _statesCache = (j.countries ?? {}) as Record<string, StateScore[]>;
+  return _statesCache;
+}
+
 /* Committed per-country women's vital statistics (weekly estimates), used by the
    live clock when the scoring API is unavailable. */
 let _vitalCache: Record<string, VitalStats> | null = null;
@@ -284,7 +296,7 @@ export const api = {
     states: (country: string) =>
       apiFetch<StateListResponse>(`/v1/wei/states/${country}`)
         .then((r) => ({ ...r, data: (r.data ?? []).map(normState) }))
-        .catch(() => { markFallback(); return { count: 0, data: [] as StateScore[] } as StateListResponse; }),
+        .catch(async () => { markFallback(); const s = await loadStatesFallback(); const data = s[country.toLowerCase()] ?? []; return { country, count: data.length, data } as StateListResponse; }),
   },
 
   gpi: {
