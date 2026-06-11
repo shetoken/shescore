@@ -60,6 +60,9 @@ export default function Landscape() {
             </div>
           </div>
           <p className="source-line">Coverage and cadence per each publisher's latest release.</p>
+          <Link to="/reports" className="mt-2 inline-flex items-center gap-1.5 text-sm text-magenta-ink hover:underline">
+            <BookOpenCheck className="h-4 w-4" /> See the latest published reports behind each index →
+          </Link>
         </section>
 
         <section>
