@@ -44,6 +44,18 @@ async function loadFallback() {
 }
 function markFallback() { try { (window as any).__sheApiFallback = true; } catch { /* ssr */ } }
 export function isApiFallback() { try { return !!(window as any).__sheApiFallback; } catch { return false; } }
+
+/* Committed per-country women's vital statistics (weekly estimates), used by the
+   live clock when the scoring API is unavailable. */
+let _vitalCache: Record<string, VitalStats> | null = null;
+async function loadVitalFallback(): Promise<Record<string, VitalStats>> {
+  if (_vitalCache) return _vitalCache;
+  const res = await fetch(`${import.meta.env.BASE_URL}data/vital-countries.json`);
+  if (!res.ok) throw new Error("no vital data");
+  const j = await res.json();
+  _vitalCache = (j.countries ?? {}) as Record<string, VitalStats>;
+  return _vitalCache;
+}
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /** Weekly scan stats emitted by the SHEtoken data agent. */
@@ -313,7 +325,12 @@ export const api = {
   lifepath: (iso: string) => apiFetch<Lifepath>(`/v1/lifepath/${iso}`),
 
   vital: {
-    country: (iso: string) => apiFetch<VitalStats>(`/v1/vital/countries/${iso}`),
+    country: (iso: string) =>
+      apiFetch<VitalStats>(`/v1/vital/countries/${iso}`)
+        .catch(async () => { markFallback(); const v = await loadVitalFallback(); const c = v[iso]; if (!c) throw new Error("no vital data"); return c; }),
+    all: () =>
+      apiFetch<{ data: VitalStats[] }>(`/v1/vital/countries`).then((r) => r.data)
+        .catch(async () => { markFallback(); const v = await loadVitalFallback(); return Object.values(v); }),
   },
 
   signals: {
