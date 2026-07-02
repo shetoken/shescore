@@ -6,8 +6,8 @@
 import { geoEqualEarth, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 
-// world-atlas@2 via npm CDN — ISO 3166-1 numeric feature IDs
-export const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+// world-atlas@2, vendored same-origin (CDN fetches are firewall-blocked) — ISO 3166-1 numeric feature IDs
+export const GEO_URL = `${import.meta.env.BASE_URL}data/countries-110m.json`;
 
 // ISO 3166-1 numeric → alpha-3 (matches world-atlas feature ids to our API's iso_code)
 export const NUM_TO_ISO3: Record<string, string> = {

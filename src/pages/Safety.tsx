@@ -68,11 +68,13 @@ const INDIA_CITIES: CityLabel[] = [
   { city: "Dehradun", state: "Uttarakhand", coords: [78.03, 30.32] }, { city: "Shimla", state: "Himachal Pradesh", coords: [77.17, 31.10] },
 ];
 
-/* Per-country choropleth config (state polygons via public topojson). */
+/* Per-country choropleth config. State polygons are vendored in public/data/
+   (same-origin, like WorldMap) — runtime CDN fetches get blocked by corporate
+   firewalls. India source: Anujarya300/bubble_maps; USA source: us-atlas@3. */
 const CHOROPLETH: Record<string, { geoUrl: string; nameKey: string; projection: string; projectionConfig: Record<string, unknown>; cities?: CityLabel[] }> = {
-  IND: { geoUrl: "https://cdn.jsdelivr.net/gh/Anujarya300/bubble_maps@master/data/geography-data/india.topo.json",
+  IND: { geoUrl: `${import.meta.env.BASE_URL}data/india-states.topo.json`,
     nameKey: "name", projection: "geoMercator", projectionConfig: { scale: 1000, center: [82.5, 22.8] }, cities: INDIA_CITIES },
-  USA: { geoUrl: "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
+  USA: { geoUrl: `${import.meta.env.BASE_URL}data/us-states-10m.json`,
     nameKey: "name", projection: "geoAlbersUsa", projectionConfig: { scale: 1000 } },
 };
 
